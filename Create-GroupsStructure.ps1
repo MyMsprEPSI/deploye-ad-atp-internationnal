@@ -2,13 +2,13 @@
 
 <#
 .SYNOPSIS
-    Script pour créer des groupes Active Directory dans la structure internationale
+    Script pour creer des groupes Active Directory dans la structure internationale
 .DESCRIPTION
-    Ce script crée des groupes dans les OUs Groupes de chaque ville
+    Ce script cree des groupes dans les OUs Groupes de chaque ville
 .NOTES
     Auteur: Thibaut Maurras
     Version: 2025.06.18
-    Prérequis: Module ActiveDirectory et droits d'administration sur le domaine
+    Prerequis: Module ActiveDirectory et droits d'administration sur le domaine
 #>
 
 # Configuration
@@ -69,12 +69,12 @@ $Configuration = @{
 $GroupTypes = @(
     @{ Name = "Administrateurs"; Scope = "DomainLocal"; Category = "Security"; Description = "Administrateurs locaux" },
     @{ Name = "Utilisateurs"; Scope = "DomainLocal"; Category = "Security"; Description = "Utilisateurs standard" },
-    @{ Name = "Finance"; Scope = "Global"; Category = "Security"; Description = "Département Finance" },
+    @{ Name = "Finance"; Scope = "Global"; Category = "Security"; Description = "Departement Finance" },
     @{ Name = "RH"; Scope = "Global"; Category = "Security"; Description = "Ressources Humaines" },
     @{ Name = "IT"; Scope = "Global"; Category = "Security"; Description = "Technologies de l'Information" },
-    @{ Name = "Marketing"; Scope = "Global"; Category = "Security"; Description = "Département Marketing" },
-    @{ Name = "Operations"; Scope = "Global"; Category = "Security"; Description = "Département Opérations" },
-    @{ Name = "Legal"; Scope = "Global"; Category = "Security"; Description = "Département Juridique" },
+    @{ Name = "Marketing"; Scope = "Global"; Category = "Security"; Description = "Departement Marketing" },
+    @{ Name = "Operations"; Scope = "Global"; Category = "Security"; Description = "Departement Operations" },
+    @{ Name = "Legal"; Scope = "Global"; Category = "Security"; Description = "Departement Juridique" },
     @{ Name = "Managers"; Scope = "Global"; Category = "Security"; Description = "Managers et superviseurs" },
     @{ Name = "Support"; Scope = "Global"; Category = "Security"; Description = "Support technique" }
 )
@@ -98,14 +98,14 @@ foreach ($Continent in $Configuration.WorldStructure.Keys) {
     }
 }
 
-Write-Information "=== Création des groupes mondiaux ===" -InformationAction Continue
-Write-Information "Villes à traiter: $($Cities.Count)" -InformationAction Continue
+Write-Information "=== Creation des groupes mondiaux ===" -InformationAction Continue
+Write-Information "Villes a traiter: $($Cities.Count)" -InformationAction Continue
 
 $TotalGroups = $Cities.Count * $GroupTypes.Count
-Write-Information "Total groupes à créer: $TotalGroups" -InformationAction Continue
+Write-Information "Total groupes a creer: $TotalGroups" -InformationAction Continue
 
 Import-Module ActiveDirectory -ErrorAction Stop
-Write-Information "Module ActiveDirectory chargé" -InformationAction Continue
+Write-Information "Module ActiveDirectory charge" -InformationAction Continue
 
 $CreatedGroups = @{}
 
@@ -115,13 +115,13 @@ foreach ($City in $Cities) {
     try {
         $GroupsOU = "OU=Groupes,OU=$($City.Name),OU=$($City.Country),OU=$($City.Continent),$($Configuration.BaseOU)"
 
-        # Vérifier que l'OU existe
+        # Verifier que l'OU existe
         try {
             Get-ADOrganizationalUnit -Identity $GroupsOU -ErrorAction Stop | Out-Null
-            Write-Information "OU Groupes trouvée: $GroupsOU" -InformationAction Continue
+            Write-Information "OU Groupes trouvee: $GroupsOU" -InformationAction Continue
         }
         catch {
-            Write-Error "OU Groupes non trouvée pour $($City.Name)"
+            Write-Error "OU Groupes non trouvee pour $($City.Name)"
             continue
         }
 
@@ -130,14 +130,14 @@ foreach ($City in $Cities) {
             try {
                 $GroupName = "GRP_$($City.Name.ToUpper())_$($GroupType.Name.ToUpper())"
 
-                # Vérifier si le groupe existe
+                # Verifier si le groupe existe
                 try {
                     Get-ADGroup -Identity $GroupName -ErrorAction Stop | Out-Null
-                    Write-Information "Groupe $GroupName existe déjà" -InformationAction Continue
+                    Write-Information "Groupe $GroupName existe deja" -InformationAction Continue
                     continue
                 }
                 catch {
-                    # Le groupe n'existe pas, on peut le créer
+                    # Le groupe n'existe pas, on peut le creer
                 }
 
                 New-ADGroup -Name $GroupName -Path $GroupsOU -GroupScope $GroupType.Scope -GroupCategory $GroupType.Category -Description "$($GroupType.Description) - $($City.Name)" -ErrorAction Stop
@@ -148,14 +148,14 @@ foreach ($City in $Cities) {
                 }
                 $CityGroups += $GroupName
 
-                Write-Information "Créé: $GroupName" -InformationAction Continue
+                Write-Information "Cree: $GroupName" -InformationAction Continue
             }
             catch {
-                Write-Warning "Erreur création groupe $($GroupType.Name) : $($_.Exception.Message)"
+                Write-Warning "Erreur creation groupe $($GroupType.Name) : $($_.Exception.Message)"
             }
         }
 
-        Write-Information "$($CityGroups.Count) groupes créés pour $($City.Name)" -InformationAction Continue
+        Write-Information "$($CityGroups.Count) groupes crees pour $($City.Name)" -InformationAction Continue
     }
     catch {
         Write-Error "Erreur traitement $($City.Name): $($_.Exception.Message)"
@@ -163,12 +163,12 @@ foreach ($City in $Cities) {
     }
 }
 
-Write-Information "`n=== Résumé groupes ===" -InformationAction Continue
-Write-Information "Total groupes créés: $($CreatedGroups.Keys.Count)" -InformationAction Continue
+Write-Information "`n=== Resume groupes ===" -InformationAction Continue
+Write-Information "Total groupes crees: $($CreatedGroups.Keys.Count)" -InformationAction Continue
 
 foreach ($City in $Cities) {
     $Count = ($CreatedGroups.Values | Where-Object { $_.City -eq $City.Name }).Count
     Write-Information "- $($City.Name): $Count groupes" -InformationAction Continue
 }
 
-Write-Information "`n=== Script terminé ===" -InformationAction Continue
+Write-Information "`n=== Script termine ===" -InformationAction Continue

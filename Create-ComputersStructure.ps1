@@ -2,13 +2,13 @@
 
 <#
 .SYNOPSIS
-    Script pour créer des comptes ordinateurs Active Directory dans la structure internationale
+    Script pour creer des comptes ordinateurs Active Directory dans la structure internationale
 .DESCRIPTION
-    Ce script crée des comptes ordinateurs dans les OUs Ordinateurs de chaque ville
+    Ce script cree des comptes ordinateurs dans les OUs Ordinateurs de chaque ville
 .NOTES
     Auteur: Thibaut Maurras
     Version: 2025.06.18
-    Prérequis: Module ActiveDirectory et droits d'administration sur le domaine
+    Prerequis: Module ActiveDirectory et droits d'administration sur le domaine
 #>
 
 # Configuration
@@ -66,7 +66,7 @@ $Configuration = @{
     ComputersPerCity = @{
         "Major"  = 100   # Grandes villes
         "Large"  = 50    # Grandes villes
-        "Medium" = 25   # Villes moyennes  
+        "Medium" = 25   # Villes moyennes
         "Small"  = 10    # Petites villes
     }
 }
@@ -99,14 +99,14 @@ foreach ($Continent in $Configuration.WorldStructure.Keys) {
     }
 }
 
-Write-Information "=== Création des ordinateurs mondiaux ===" -InformationAction Continue
-Write-Information "Villes à traiter: $($Cities.Count)" -InformationAction Continue
+Write-Information "=== Creation des ordinateurs mondiaux ===" -InformationAction Continue
+Write-Information "Villes a traiter: $($Cities.Count)" -InformationAction Continue
 
 $TotalComputers = ($Cities | ForEach-Object { $_.ComputerCount } | Measure-Object -Sum).Sum
-Write-Information "Total ordinateurs à créer: $TotalComputers" -InformationAction Continue
+Write-Information "Total ordinateurs a creer: $TotalComputers" -InformationAction Continue
 
 Import-Module ActiveDirectory -ErrorAction Stop
-Write-Information "Module ActiveDirectory chargé" -InformationAction Continue
+Write-Information "Module ActiveDirectory charge" -InformationAction Continue
 
 $CreatedComputers = @{}
 
@@ -116,13 +116,13 @@ foreach ($City in $Cities) {
     try {
         $ComputersOU = "OU=Ordinateurs,OU=$($City.Name),OU=$($City.Country),OU=$($City.Continent),$($Configuration.BaseOU)"
 
-        # Vérifier que l'OU existe
+        # Verifier que l'OU existe
         try {
             Get-ADOrganizationalUnit -Identity $ComputersOU -ErrorAction Stop | Out-Null
-            Write-Information "OU Ordinateurs trouvée: $ComputersOU" -InformationAction Continue
+            Write-Information "OU Ordinateurs trouvee: $ComputersOU" -InformationAction Continue
         }
         catch {
-            Write-Error "OU Ordinateurs non trouvée pour $($City.Name)"
+            Write-Error "OU Ordinateurs non trouvee pour $($City.Name)"
             continue
         }
 
@@ -137,14 +137,14 @@ foreach ($City in $Cities) {
                 $ComputerName = $ComputerName -replace "-", "" -replace " ", ""
                 $ComputerName = $ComputerName.Substring(0, [Math]::Min(15, $ComputerName.Length)) # Limite NetBIOS
 
-                # Vérifier si l'ordinateur existe
+                # Verifier si l'ordinateur existe
                 try {
                     Get-ADComputer -Identity $ComputerName -ErrorAction Stop | Out-Null
-                    Write-Information "Ordinateur $ComputerName existe déjà" -InformationAction Continue
+                    Write-Information "Ordinateur $ComputerName existe deja" -InformationAction Continue
                     continue
                 }
                 catch {
-                    # L'ordinateur n'existe pas, on peut le créer
+                    # L'ordinateur n'existe pas, on peut le creer
                 }
 
                 New-ADComputer -Name $ComputerName -Path $ComputersOU -Description "$ComputerType - $Department - $($City.Name)" -Enabled $true -ErrorAction Stop
@@ -156,15 +156,15 @@ foreach ($City in $Cities) {
                 $CityComputers += $ComputerName
 
                 if ($i % 10 -eq 0 -or $i -eq $City.ComputerCount) {
-                    Write-Information "Créé: $ComputerName" -InformationAction Continue
+                    Write-Information "Cree: $ComputerName" -InformationAction Continue
                 }
             }
             catch {
-                Write-Warning "Erreur création ordinateur $i : $($_.Exception.Message)"
+                Write-Warning "Erreur creation ordinateur $i : $($_.Exception.Message)"
             }
         }
 
-        Write-Information "$($CityComputers.Count) ordinateurs créés pour $($City.Name)" -InformationAction Continue
+        Write-Information "$($CityComputers.Count) ordinateurs crees pour $($City.Name)" -InformationAction Continue
     }
     catch {
         Write-Error "Erreur traitement $($City.Name): $($_.Exception.Message)"
@@ -172,15 +172,15 @@ foreach ($City in $Cities) {
     }
 }
 
-Write-Information "`n=== Résumé ordinateurs ===" -InformationAction Continue
-Write-Information "Total ordinateurs créés: $($CreatedComputers.Keys.Count)" -InformationAction Continue
+Write-Information "`n=== Resume ordinateurs ===" -InformationAction Continue
+Write-Information "Total ordinateurs crees: $($CreatedComputers.Keys.Count)" -InformationAction Continue
 
 foreach ($City in $Cities) {
     $Count = ($CreatedComputers.Values | Where-Object { $_.City -eq $City.Name }).Count
     Write-Information "- $($City.Name): $Count ordinateurs" -InformationAction Continue
 }
 
-Write-Information "`n=== Script terminé ===" -InformationAction Continue
+Write-Information "`n=== Script termine ===" -InformationAction Continue
 Write-Host "`n=== Résumé ordinateurs ===" -ForegroundColor Cyan
 Write-Host "Total ordinateurs créés: $($CreatedComputers.Keys.Count)" -ForegroundColor Green
 

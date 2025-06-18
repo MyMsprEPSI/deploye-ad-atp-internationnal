@@ -2,20 +2,20 @@
 
 <#
 .SYNOPSIS
-    Script pour créer des comptes serveurs Active Directory dans la structure internationale
+    Script pour creer des comptes serveurs Active Directory dans la structure internationale
 .DESCRIPTION
-    Ce script crée des comptes serveurs dans les OUs Serveurs de chaque ville
+    Ce script cree des comptes serveurs dans les OUs Serveurs de chaque ville
 .NOTES
     Auteur: Thibaut Maurras
     Version: 2025.06.18
-    Prérequis: Module ActiveDirectory et droits d'administration sur le domaine
+    Prerequis: Module ActiveDirectory et droits d'administration sur le domaine
 #>
 
 # Configuration
 $Configuration = @{
     Domain         = "atp.local"
     BaseOU         = "OU=International,OU=ATP,DC=atp,DC=local"
-    WorldStructure  = @{
+    WorldStructure = @{
         "Europe"           = @{
             "France"     = @("Paris", "Lyon", "Marseille", "Monaco", "Toulouse", "Nice", "Nantes", "Strasbourg", "Montpellier", "Bordeaux")
             "Angleterre" = @("Londres", "Manchester", "Birmingham", "Liverpool", "Leeds", "Sheffield", "Bristol", "Newcastle", "Nottingham", "Leicester")
@@ -64,7 +64,7 @@ $Configuration = @{
         }
     }
     ServersPerCity = @{
-        "Major"  = 15    # Grandes villes (centres de données)
+        "Major"  = 15    # Grandes villes (centres de donnees)
         "Large"  = 8     # Grandes villes
         "Medium" = 5    # Villes moyennes
         "Small"  = 3     # Petites villes
@@ -96,14 +96,14 @@ foreach ($Continent in $Configuration.WorldStructure.Keys) {
     }
 }
 
-Write-Information "=== Création des serveurs mondiaux ===" -InformationAction Continue
-Write-Information "Villes à traiter: $($Cities.Count)" -InformationAction Continue
+Write-Information "=== Creation des serveurs mondiaux ===" -InformationAction Continue
+Write-Information "Villes a traiter: $($Cities.Count)" -InformationAction Continue
 
 $TotalServers = ($Cities | ForEach-Object { $_.ServerCount } | Measure-Object -Sum).Sum
-Write-Information "Total serveurs à créer: $TotalServers" -InformationAction Continue
+Write-Information "Total serveurs a creer: $TotalServers" -InformationAction Continue
 
 Import-Module ActiveDirectory -ErrorAction Stop
-Write-Information "Module ActiveDirectory chargé" -InformationAction Continue
+Write-Information "Module ActiveDirectory charge" -InformationAction Continue
 
 $CreatedServers = @{}
 
@@ -113,13 +113,13 @@ foreach ($City in $Cities) {
     try {
         $ServersOU = "OU=Serveurs,OU=$($City.Name),OU=$($City.Country),OU=$($City.Continent),$($Configuration.BaseOU)"
 
-        # Vérifier que l'OU existe
+        # Verifier que l'OU existe
         try {
             Get-ADOrganizationalUnit -Identity $ServersOU -ErrorAction Stop | Out-Null
-            Write-Information "OU Serveurs trouvée: $ServersOU" -InformationAction Continue
+            Write-Information "OU Serveurs trouvee: $ServersOU" -InformationAction Continue
         }
         catch {
-            Write-Error "OU Serveurs non trouvée pour $($City.Name)"
+            Write-Error "OU Serveurs non trouvee pour $($City.Name)"
             continue
         }
 
@@ -134,14 +134,14 @@ foreach ($City in $Cities) {
                 $ServerName = $ServerName -replace "-", "" -replace " ", ""
                 $ServerName = $ServerName.Substring(0, [Math]::Min(15, $ServerName.Length))
 
-                # Vérifier si le serveur existe
+                # Verifier si le serveur existe
                 try {
                     Get-ADComputer -Identity $ServerName -ErrorAction Stop | Out-Null
-                    Write-Information "Serveur $ServerName existe déjà" -InformationAction Continue
+                    Write-Information "Serveur $ServerName existe deja" -InformationAction Continue
                     continue
                 }
                 catch {
-                    # Le serveur n'existe pas, on peut le créer
+                    # Le serveur n'existe pas, on peut le creer
                 }
 
                 New-ADComputer -Name $ServerName -Path $ServersOU -Description "Serveur $ServerRole - $($City.Name)" -Enabled $true -ErrorAction Stop
@@ -151,14 +151,14 @@ foreach ($City in $Cities) {
                 }
                 $CityServers += $ServerName
 
-                Write-Information "Créé: $ServerName ($ServerRole)" -InformationAction Continue
+                Write-Information "Cree: $ServerName ($ServerRole)" -InformationAction Continue
             }
             catch {
-                Write-Warning "Erreur création serveur $i : $($_.Exception.Message)"
+                Write-Warning "Erreur creation serveur $i : $($_.Exception.Message)"
             }
         }
 
-        Write-Information "$($CityServers.Count) serveurs créés pour $($City.Name)" -InformationAction Continue
+        Write-Information "$($CityServers.Count) serveurs crees pour $($City.Name)" -InformationAction Continue
     }
     catch {
         Write-Error "Erreur traitement $($City.Name): $($_.Exception.Message)"
@@ -166,14 +166,14 @@ foreach ($City in $Cities) {
     }
 }
 
-Write-Information "`n=== Résumé serveurs ===" -InformationAction Continue
-Write-Information "Total serveurs créés: $($CreatedServers.Keys.Count)" -InformationAction Continue
+Write-Information "`n=== Resume serveurs ===" -InformationAction Continue
+Write-Information "Total serveurs crees: $($CreatedServers.Keys.Count)" -InformationAction Continue
 
 foreach ($City in $Cities) {
     $Count = ($CreatedServers.Values | Where-Object { $_.City -eq $City.Name }).Count
     Write-Information "- $($City.Name): $Count serveurs" -InformationAction Continue
 }
 
-Write-Information "`n=== Script terminé ===" -InformationAction Continue
+Write-Information "`n=== Script termine ===" -InformationAction Continue
 Write-Host "- $($City.Name): $Count serveurs" -ForegroundColor White
 Write-Host "`n=== Script terminé ===" -ForegroundColor Green
