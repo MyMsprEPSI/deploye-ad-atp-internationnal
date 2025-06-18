@@ -329,20 +329,6 @@ Le systeme est concu pour etre facilement extensible :
 
 Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de details.
 
-## 📞 Support
-
-### Contact
-
-- **Auteur** : Thibaut Maurras
-- **Version** : 2025.06.18
-- **Email** : thibaut.maurras@exemple.com
-- **GitHub** : [thibautmaurras](https://github.com/thibautmaurras)
-
-### Documentation Supplementaire
-
-- [Guide de Deploiement Detaille](docs/DEPLOYMENT-GUIDE.md)
-- [Architecture du Projet](docs/ARCHITECTURE.md)
-- [Guide de Resolution de Problemes](docs/TROUBLESHOOTING.md)
 
 ## 🏆 Remerciements
 
@@ -356,33 +342,3 @@ Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de
 
 **📅 Derniere mise a jour** : Decembre 2024
 **🔖 Version** : 2025.06.18 (Version optimisee)
-
-## 📋 Notes de Version 2025.06.18
-
-### Nouveautes
-
-- **Reduction strategique** du nombre de villes (67 au lieu de 500+)
-- **Optimisation des quantites** d'objets pour les environnements de test
-- **Amelioration des performances** de deploiement
-- **Correction PSScriptAnalyzer** pour la majorite des avertissements
-
-### Changements Techniques
-
-- **Utilisateurs** : ~4,000 (au lieu de ~40,000)
-- **Ordinateurs** : ~1,500 (limite aux 3 premieres villes par pays)
-- **Serveurs** : ~400 (limite aux 2 premieres villes par pays)
-- **Temps de deploiement** : Reduit de ~80%
-
-### Configuration Actuelle
-
-- **Major Cities** : 150 utilisateurs, 100 ordinateurs, 15 serveurs
-- **Large Cities** : 50 utilisateurs, 50 ordinateurs, 8 serveurs
-- **Medium Cities** : 25 utilisateurs, 25 ordinateurs
-- **Small Cities** : 15 utilisateurs
-
-Cette version optimisee est ideale pour :
-
-- ✅ Tests et demonstrations
-- ✅ Environnements de formation
-- ✅ Validation de concepts
-- ✅ Deploiements rapides

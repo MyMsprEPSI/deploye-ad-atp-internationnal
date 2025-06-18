@@ -70,10 +70,10 @@ $Configuration = @{
     }
     # Parametres de generation automatique
     UsersPerCity    = @{
-        "Major"  = 150     # Grandes villes (capitales, metropoles)
-        "Large"  = 50     # Grandes villes
-        "Medium" = 25    # Villes moyennes
-        "Small"  = 15      # Petites villes
+        "Major"  = 50     # Grandes villes (capitales, metropoles)
+        "Large"  = 20     # Grandes villes
+        "Medium" = 10    # Villes moyennes
+        "Small"  = 5      # Petites villes
     }
 }
 
