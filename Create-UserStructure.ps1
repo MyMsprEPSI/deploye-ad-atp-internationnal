@@ -18,7 +18,7 @@ $Configuration = @{
     Domain          = "atp.local"
     BaseDN          = "DC=atp,DC=local"
     BaseOU          = "OU=International,OU=ATP,DC=atp,DC=local"
-    DefaultPassword = "Password123!"
+    DefaultPassword = "Epsi@2025."
     Cities          = @(
         @{
             Name      = "Londres"
