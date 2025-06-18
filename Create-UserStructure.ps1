@@ -139,7 +139,6 @@ foreach ($City in $Configuration.Cities) {
         # Créer les utilisateurs
         $CityUsers = @()
         for ($i = 1; $i -le $City.UserCount; $i++) {
-            # Générer nom d'utilisateur unique
             $Attempts = 0
             do {
                 $FirstName = Get-Random -InputObject $FirstNames
@@ -153,7 +152,7 @@ foreach ($City in $Configuration.Cities) {
                     break
                 }
             } while ($CreatedUsers.ContainsKey($Username))
-                
+
             # Paramètres utilisateur
             $UserParams = @{
                 Name                  = "$FirstName $LastName"
@@ -170,31 +169,30 @@ foreach ($City in $Configuration.Cities) {
                 City                  = $City.Name
                 PasswordNeverExpires  = $false
             }
-                
-                # Vérifier si utilisateur existe
-                $ExistingUser = $null
+
+            # Vérifier si utilisateur existe
+            $ExistingUser = $null
+            try {
+                $ExistingUser = Get-ADUser -Identity $Username -ErrorAction Stop
+            }
+            catch {
+                # Utilisateur n'existe pas
+            }
+
+            if ($ExistingUser -or $CreatedUsers.ContainsKey($Username)) {
+                Write-Host "Utilisateur $Username existe déjà - ignoré" -ForegroundColor Yellow
+            }
+            else {
                 try {
-                    $ExistingUser = Get-ADUser -Identity $Username -ErrorAction Stop
-                }
-                catch {
-                    # Utilisateur n'existe pas
-                }
-                    
-                if ($ExistingUser -or $CreatedUsers.ContainsKey($Username)) {
-                    Write-Host "Utilisateur $Username existe déjà - ignoré" -ForegroundColor Yellow
-                }
-                else {
                     New-ADUser @UserParams -ErrorAction Stop
                     $CreatedUsers[$Username] = $true
                     $CityUsers += $Username
                 }
+                catch {
+                    Write-Host "Erreur création $Username : $($_.Exception.Message)" -ForegroundColor Red
                 }
-                    
             }
-            catch {
-                Write-Host "Erreur création $Username : $($_.Exception.Message)" -ForegroundColor Red
-            }
-                
+
             if ($i % 25 -eq 0 -or $i -eq $City.UserCount) {
                 Write-Host "Progression: $i/$($City.UserCount) pour $($City.Name)" -ForegroundColor Gray
             }
