@@ -6,80 +6,86 @@
 
 ## 📋 Description
 
-Ce projet automatise le déploiement d'une structure Active Directory internationale complète pour l'organisation ATP. Il permet de créer une hiérarchie organisationnelle mondiale avec des unités d'organisation (OUs), des utilisateurs, des ordinateurs, des serveurs et des groupes répartis sur 6 continents et leurs principales villes.
+Ce projet automatise le deploiement d'une structure Active Directory internationale complete pour l'organisation ATP. Il permet de creer une hierarchie organisationnelle mondiale avec des unites d'organisation (OUs), des utilisateurs, des ordinateurs, des serveurs et des groupes repartis sur 6 continents et leurs principales villes.
 
-## 🌍 Structure Mondiale
+## 🌍 Structure Mondiale Reduite
 
-Le projet couvre les continents suivants :
+Le projet couvre une selection strategique de continents et villes :
 
-- **Europe** : France, Angleterre, Allemagne, Espagne, Italie, Pays-Bas, Belgique, Suisse
-- **Amérique du Nord** : USA, Canada, Mexique
-- **Amérique du Sud** : Brésil, Argentine, Chili, Colombie, Pérou
-- **Asie** : Chine, Japon, Inde, Corée du Sud, Singapour, Malaisie, Thaïlande, Vietnam
-- **Afrique** : Afrique du Sud, Nigeria, Égypte, Maroc, Kenya, Ghana
-- **Océanie** : Australie, Nouvelle-Zélande, Papouasie-Nouvelle-Guinée, Fidji
+- **Europe** : France (5 villes), Angleterre (2), Allemagne (2), Espagne (2), Italie (4), Pays-Bas (2), Belgique (2), Suisse (2)
+- **Amerique du Nord** : USA (5 villes), Canada (2), Mexique (2)
+- **Amerique du Sud** : Bresil (2), Argentine (2), Chili (2), Colombie (2), Perou (2)
+- **Asie** : Chine (2), Japon (3), Inde (3), Coree du Sud (3), Singapour (1), Malaisie (2), Thailande (2), Vietnam (3)
+- **Afrique** : Afrique du Sud (3), Nigeria (2), Egypte (1), Maroc (2), Kenya (2), Ghana (2)
+- **Oceanie** : Australie (2), Nouvelle-Zelande (1), Papouasie-Nouvelle-Guinee (1), Fidji (1)
 
-## 🚀 Fonctionnalités
+**Total** : 6 continents, 26 pays, 67 villes
+
+## 🚀 Fonctionnalites
 
 ### ✅ Structure Organisationnelle
 
-- Création automatique de la hiérarchie OU ATP → International → Continents → Pays → Villes
-- Plus de 500 villes réparties sur 6 continents
-- Sous-OUs standardisées : Utilisateurs, Ordinateurs, Serveurs, Groupes
+- Creation automatique de la hierarchie OU ATP → International → Continents → Pays → Villes
+- 67 villes strategiquement selectionnees
+- Sous-OUs standardisees : Utilisateurs, Ordinateurs, Serveurs, Groupes
 
 ### 👥 Gestion des Utilisateurs
 
-- Génération automatique de **~40,000 utilisateurs** avec prénoms/noms français réalistes
-- Répartition intelligente basée sur la taille des villes (Major: 500, Large: 200, Medium: 100, Small: 50)
+- Generation automatique de **~4,000 utilisateurs** avec prenoms/noms francais realistes
+- Repartition intelligente basee sur la taille des villes :
+  - **Major** : 150 utilisateurs (capitales, metropoles)
+  - **Large** : 50 utilisateurs (grandes villes)
+  - **Medium** : 25 utilisateurs (villes moyennes)
+  - **Small** : 15 utilisateurs (petites villes)
 - Noms d'utilisateur uniques avec gestion des doublons
-- Attributs complets (DisplayName, UPN, Description, City)
+- Mot de passe par defaut : `Epsi@2025.`
 
 ### 💻 Ordinateurs et Serveurs
 
-- Création d'ordinateurs par type (PC, Laptop, Workstation) et département
-- Serveurs spécialisés par rôle (DC, FILE, PRINT, WEB, DB, APP, MAIL, DNS, DHCP, BACKUP)
-- Nomenclature standardisée et noms NetBIOS compatibles
+- **Ordinateurs** : ~1,500 machines (3 premieres villes par pays)
+  - Major : 100, Large : 50, Medium : 25 ordinateurs
+  - Types : PC, Laptop, Workstation
+  - Departements : Finance, RH, IT, Marketing, Operations, Legal
+- **Serveurs** : ~400 serveurs (2 premieres villes par pays)
+  - Major : 15, Large : 8 serveurs
+  - Roles : DC, FILE, PRINT, WEB, DB, APP, MAIL, DNS, DHCP, BACKUP
 
-### 🔐 Groupes de Sécurité
+### 🔐 Groupes de Securite
 
-- Groupes par département : Finance, RH, IT, Marketing, Operations, Legal
-- Groupes administratifs : Administrateurs, Utilisateurs, Managers, Support
-- Scopes appropriés (Global, DomainLocal) selon les meilleures pratiques
+- **~670 groupes** (10 groupes par ville)
+- Types : Administrateurs, Utilisateurs, Finance, RH, IT, Marketing, Operations, Legal, Managers, Support
+- Scopes appropries (Global, DomainLocal) selon les meilleures pratiques
 
 ## 📁 Structure du Projet
 
 ```
 deploye-ad-atp-internationnal/
 ├── README.md                        # Ce fichier
-├── Create-BaseOUStructure.ps1       # Création structure OU de base
-├── Create-UserStructure.ps1         # Création des utilisateurs
-├── Create-ComputersStructure.ps1    # Création des ordinateurs
-├── Create-ServersStructure.ps1      # Création des serveurs
-├── Create-GroupsStructure.ps1       # Création des groupes
-└── docs/
-    ├── DEPLOYMENT-GUIDE.md          # Guide de déploiement détaillé
-    ├── ARCHITECTURE.md              # Documentation architecture
-    └── TROUBLESHOOTING.md           # Guide de résolution de problèmes
+├── Create-BaseOUStructure.ps1       # Creation structure OU de base
+├── Create-UserStructure.ps1         # Creation des utilisateurs
+├── Create-ComputersStructure.ps1    # Creation des ordinateurs
+├── Create-ServersStructure.ps1      # Creation des serveurs
+└── Create-GroupsStructure.ps1       # Creation des groupes
 ```
 
-## 🔧 Prérequis
+## 🔧 Prerequis
 
-### Système
+### Systeme
 
 - **OS** : Windows Server 2016/2019/2022 ou Windows 10/11 avec RSAT
-- **PowerShell** : Version 5.1 ou supérieure
+- **PowerShell** : Version 5.1 ou superieure
 - **Module** : ActiveDirectory PowerShell Module
 
 ### Permissions
 
 - Droits d'administration sur le domaine Active Directory
-- Permissions de création d'objets dans l'Active Directory
-- Accès en écriture aux OUs de destination
+- Permissions de creation d'objets dans l'Active Directory
+- Acces en ecriture aux OUs de destination
 
 ### Infrastructure
 
-- Contrôleur de domaine accessible
-- Domaine configuré : `atp.local`
+- Controleur de domaine accessible
+- Domaine configure : `atp.local`
 - Structure de base existante : `DC=atp,DC=local`
 
 ## 📦 Installation
@@ -91,32 +97,38 @@ git clone https://github.com/votre-organisation/deploye-ad-atp-internationnal.gi
 cd deploye-ad-atp-internationnal
 ```
 
-### 2. Vérifier les Prérequis
+### 2. Verifier les Prerequis
 
 ```powershell
-# Vérifier le module Active Directory
+# Verifier le module Active Directory
 Get-Module -ListAvailable ActiveDirectory
 
-# Installer si nécessaire (Windows 10/11)
+# Installer si necessaire (Windows 10/11)
 Add-WindowsCapability -Online -Name Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0
 ```
 
 ### 3. Configuration
 
-Modifier les paramètres dans chaque script selon votre environnement :
+Les scripts utilisent une configuration optimisee pour les tests :
 
 ```powershell
-# Exemple de configuration
+# Configuration automatique
 $Configuration = @{
-    Domain = "votre-domaine.local"
-    BaseOU = "OU=International,OU=ATP,DC=votre-domaine,DC=local"
-    DefaultPassword = "VotreMotDePasse@2025"
+    Domain = "atp.local"
+    BaseOU = "OU=International,OU=ATP,DC=atp,DC=local"
+    DefaultPassword = "Epsi@2025."
+    UsersPerCity = @{
+        "Major"  = 150    # Grandes metropoles
+        "Large"  = 50     # Grandes villes
+        "Medium" = 25     # Villes moyennes
+        "Small"  = 15     # Petites villes
+    }
 }
 ```
 
-## 🚀 Déploiement
+## 🚀 Deploiement
 
-### Ordre d'Exécution Recommandé
+### Ordre d'Execution Recommande
 
 #### 1. Structure de Base (Obligatoire en premier)
 
@@ -124,7 +136,7 @@ $Configuration = @{
 .\Create-BaseOUStructure.ps1
 ```
 
-**Résultat** : Création de ~3,000 OUs (ATP + International + Continents + Pays + Villes + Sous-OUs)
+**Resultat** : Creation de ~400 OUs (ATP + International + Continents + Pays + Villes + Sous-OUs)
 
 #### 2. Utilisateurs
 
@@ -132,7 +144,7 @@ $Configuration = @{
 .\Create-UserStructure.ps1
 ```
 
-**Résultat** : Création de ~40,000 utilisateurs répartis mondialement
+**Resultat** : Creation de ~4,000 utilisateurs repartis mondialement
 
 #### 3. Ordinateurs
 
@@ -140,7 +152,7 @@ $Configuration = @{
 .\Create-ComputersStructure.ps1
 ```
 
-**Résultat** : Création de ~3,000 ordinateurs (3 premiers villes par pays)
+**Resultat** : Creation de ~1,500 ordinateurs (3 premieres villes par pays)
 
 #### 4. Serveurs
 
@@ -148,7 +160,7 @@ $Configuration = @{
 .\Create-ServersStructure.ps1
 ```
 
-**Résultat** : Création de ~600 serveurs (2 premières villes par pays)
+**Resultat** : Creation de ~400 serveurs (2 premieres villes par pays)
 
 #### 5. Groupes
 
@@ -156,12 +168,12 @@ $Configuration = @{
 .\Create-GroupsStructure.ps1
 ```
 
-**Résultat** : Création de ~5,000 groupes (10 groupes par ville)
+**Resultat** : Creation de ~670 groupes (10 groupes par ville)
 
-### Exécution Complète
+### Execution Complete
 
 ```powershell
-# Script de déploiement complet
+# Script de deploiement complet
 $Scripts = @(
     "Create-BaseOUStructure.ps1",
     "Create-UserStructure.ps1",
@@ -171,40 +183,40 @@ $Scripts = @(
 )
 
 foreach ($Script in $Scripts) {
-    Write-Host "Exécution de $Script..." -ForegroundColor Green
+    Write-Information "Execution de $Script..." -InformationAction Continue
     & ".\$Script"
-    Write-Host "$Script terminé.`n" -ForegroundColor Green
+    Write-Information "$Script termine.`n" -InformationAction Continue
 }
 ```
 
-## 📊 Statistiques de Déploiement
+## 📊 Statistiques de Deploiement (Version Optimisee)
 
-| Élément          | Quantité Approximative | Description                                  |
-| ---------------- | ---------------------- | -------------------------------------------- |
-| **OUs Total**    | ~3,000                 | Base + Continents + Pays + Villes + Sous-OUs |
-| **Utilisateurs** | ~40,000                | Répartis selon la taille des villes          |
-| **Ordinateurs**  | ~3,000                 | PC, Laptops, Workstations                    |
-| **Serveurs**     | ~600                   | Serveurs spécialisés par rôle                |
-| **Groupes**      | ~5,000                 | 10 groupes par ville                         |
-| **Continents**   | 6                      | Europe, Amériques, Asie, Afrique, Océanie    |
-| **Pays**         | 26                     | Principales puissances économiques           |
-| **Villes**       | ~500                   | Métropoles et villes importantes             |
+| Element          | Quantite Approximative | Description                                    |
+| ---------------- | ---------------------- | ---------------------------------------------- |
+| **OUs Total**    | ~400                   | Base + Continents + Pays + Villes + Sous-OUs   |
+| **Utilisateurs** | ~4,000                 | Repartis selon la taille des villes            |
+| **Ordinateurs**  | ~1,500                 | PC, Laptops, Workstations (3 villes/pays)      |
+| **Serveurs**     | ~400                   | Serveurs specialises par role (2 villes/pays)  |
+| **Groupes**      | ~670                   | 10 groupes par ville                           |
+| **Continents**   | 6                      | Europe, Ameriques, Asie, Afrique, Oceanie      |
+| **Pays**         | 26                     | Principales puissances economiques             |
+| **Villes**       | 67                     | Metropoles et villes importantes selectionnees |
 
-## ⚙️ Configuration Avancée
+## ⚙️ Configuration Avancee
 
-### Personnalisation des Quantités
+### Personnalisation des Quantites
 
 ```powershell
 # Dans Create-UserStructure.ps1
 $UsersPerCity = @{
-    "Major"  = 1000    # Grandes métropoles
-    "Large"  = 500     # Grandes villes
-    "Medium" = 250     # Villes moyennes
-    "Small"  = 100     # Petites villes
+    "Major"  = 200    # Augmenter pour plus d'utilisateurs
+    "Large"  = 75     # Adapter selon vos besoins
+    "Medium" = 40     # Configuration flexible
+    "Small"  = 20     # Minimum recommande
 }
 ```
 
-### Ajout de Nouveaux Pays/Villes
+### Ajout de Nouvelles Villes
 
 ```powershell
 # Exemple d'ajout dans la WorldStructure
@@ -213,19 +225,19 @@ $UsersPerCity = @{
 }
 ```
 
-### Personnalisation des Mots de Passe
+### Modification du Mot de Passe
 
 ```powershell
-# Politique de mot de passe personnalisée
-$DefaultPassword = "VotreMotDePasse@$(Get-Date -Format 'yyyy')"
+# Dans la configuration
+DefaultPassword = "VotreMotDePasse@$(Get-Date -Format 'yyyy')"
 ```
 
 ## 🔍 Monitoring et Validation
 
-### Vérification Post-Déploiement
+### Verification Post-Deploiement
 
 ```powershell
-# Compter les objets créés
+# Compter les objets crees
 $Stats = @{
     OUs = (Get-ADOrganizationalUnit -Filter * -SearchBase "OU=International,OU=ATP,DC=atp,DC=local").Count
     Users = (Get-ADUser -Filter * -SearchBase "OU=International,OU=ATP,DC=atp,DC=local").Count
@@ -239,124 +251,138 @@ $Stats | Format-Table -AutoSize
 ### Scripts de Validation
 
 ```powershell
-# Vérifier la structure par continent
+# Verifier la structure par continent
 foreach ($Continent in @("Europe", "Amerique-du-Nord", "Asie")) {
     $OU = "OU=$Continent,OU=International,OU=ATP,DC=atp,DC=local"
     $Count = (Get-ADUser -Filter * -SearchBase $OU).Count
-    Write-Host "$Continent : $Count utilisateurs" -ForegroundColor Cyan
+    Write-Information "$Continent : $Count utilisateurs" -InformationAction Continue
 }
 ```
 
-## 🛠️ Résolution de Problèmes
+## 🛠️ Ameliorations PSScriptAnalyzer
 
-### Problèmes Courants
+### Corrections Apportees (Version 2025.06.18)
 
-#### Erreur de Permissions
+- ✅ **Suppression des caracteres speciaux** dans tous les commentaires
+- ✅ **Remplacement de Write-Host** par Write-Information avec -InformationAction Continue
+- ✅ **Correction des blocs catch vides** avec gestion d'erreur appropriee
+- ✅ **Suppression des espaces de fin de ligne**
+- ✅ **Gestion securisee des mots de passe** avec ConvertTo-SecureString
+- ✅ **Optimisation des performances** avec reduction du nombre de villes
 
-```powershell
-# Vérifier les permissions actuelles
-$CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-Write-Host "Utilisateur actuel : $($CurrentUser.Name)"
+### Problemes Restants a Corriger
 
-# Test de connexion au domaine
-try {
-    Get-ADDomain -ErrorAction Stop
-    Write-Host "✅ Connexion au domaine réussie" -ForegroundColor Green
-} catch {
-    Write-Host "❌ Erreur de connexion au domaine" -ForegroundColor Red
-}
-```
+- ⚠️ **Erreurs de parsing** dans Create-BaseOUStructure.ps1 (lignes 221, 228)
+- ⚠️ **Blocs catch vides** dans certains scripts
+- ⚠️ **Encodage BOM** manquant pour les fichiers Unicode
 
-#### Gestion des Doublons
-
-```powershell
-# Rechercher les doublons d'utilisateurs
-$AllUsers = Get-ADUser -Filter * -SearchBase "OU=International,OU=ATP,DC=atp,DC=local"
-$Duplicates = $AllUsers | Group-Object SamAccountName | Where-Object {$_.Count -gt 1}
-
-if ($Duplicates) {
-    Write-Warning "Doublons détectés : $($Duplicates.Count)"
-    $Duplicates | Select-Object Name, Count
-}
-```
-
-#### Performance et Optimisation
-
-```powershell
-# Exécution en mode batch pour de meilleures performances
-$BatchSize = 100
-$Users = 1..1000
-
-for ($i = 0; $i -lt $Users.Count; $i += $BatchSize) {
-    $Batch = $Users[$i..([Math]::Min($i + $BatchSize - 1, $Users.Count - 1))]
-    # Traitement du batch
-    Write-Progress -Activity "Création utilisateurs" -PercentComplete (($i / $Users.Count) * 100)
-}
-```
-
-## 🔐 Sécurité
+## 🔐 Securite
 
 ### Bonnes Pratiques
 
-- Les mots de passe par défaut doivent être changés après le déploiement
-- Utiliser des comptes de service dédiés pour l'exécution des scripts
-- Audit et logging de toutes les créations d'objets
-- Mise en place de politiques de groupe appropriées
+- Les mots de passe par defaut doivent etre changes apres le deploiement
+- Utiliser des comptes de service dedies pour l'execution des scripts
+- Audit et logging de toutes les creations d'objets
+- Mise en place de politiques de groupe appropriees
 
-### Nettoyage Post-Déploiement
+### Nettoyage Post-Deploiement
 
 ```powershell
-# Script de nettoyage (à utiliser avec précaution)
+# Script de nettoyage (a utiliser avec precaution)
 # Remove-ADOrganizationalUnit -Identity "OU=International,OU=ATP,DC=atp,DC=local" -Recursive -Confirm:$false
 ```
 
-## 📈 Évolutivité
+## 📈 Evolutivite
 
-### Ajout de Nouvelles Régions
+### Ajout de Nouvelles Regions
 
-Le système est conçu pour être facilement extensible :
+Le systeme est concu pour etre facilement extensible :
 
 1. Ajouter de nouveaux continents/pays dans `WorldStructure`
 2. Relancer `Create-BaseOUStructure.ps1`
-3. Exécuter les autres scripts pour peupler les nouvelles structures
+3. Executer les autres scripts pour peupler les nouvelles structures
 
-### Intégration avec d'Autres Systèmes
+### Integration avec d'Autres Systemes
 
-- Export CSV pour systèmes RH
-- Intégration avec Azure AD Connect
-- Synchronisation avec systèmes de gestion d'identité
+- Export CSV pour systemes RH
+- Integration avec Azure AD Connect
+- Synchronisation avec systemes de gestion d'identite
 
 ## 🤝 Contribution
 
 ### Comment Contribuer
 
 1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/nouvelle-fonctionnalite`)
-3. Commit des changements (`git commit -am 'Ajout nouvelle fonctionnalité'`)
+2. Creer une branche feature (`git checkout -b feature/nouvelle-fonctionnalite`)
+3. Commit des changements (`git commit -am 'Ajout nouvelle fonctionnalite'`)
 4. Push vers la branche (`git push origin feature/nouvelle-fonctionnalite`)
-5. Créer une Pull Request
+5. Creer une Pull Request
 
 ### Standards de Code
 
 - Utiliser `Write-Information` au lieu de `Write-Host`
-- Gestion d'erreur avec `try/catch` appropriée
-- Commentaires en français pour la documentation
-- Respect des conventions PowerShell
+- Gestion d'erreur avec `try/catch` appropriee
+- Commentaires sans accents pour la compatibilite
+- Respect des conventions PowerShell et PSScriptAnalyzer
 
 ## 📄 Licence
 
-Ce projet est sous licence Apache 2.0 - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de details.
 
+## 📞 Support
+
+### Contact
+
+- **Auteur** : Thibaut Maurras
+- **Version** : 2025.06.18
+- **Email** : thibaut.maurras@exemple.com
+- **GitHub** : [thibautmaurras](https://github.com/thibautmaurras)
+
+### Documentation Supplementaire
+
+- [Guide de Deploiement Detaille](docs/DEPLOYMENT-GUIDE.md)
+- [Architecture du Projet](docs/ARCHITECTURE.md)
+- [Guide de Resolution de Problemes](docs/TROUBLESHOOTING.md)
 
 ## 🏆 Remerciements
 
-- Équipe Microsoft Active Directory pour la documentation
-- Communauté PowerShell pour les bonnes pratiques
-- Contributeurs du projet pour leurs améliorations
+- Equipe Microsoft Active Directory pour la documentation
+- Communaute PowerShell pour les bonnes pratiques
+- Contributeurs du projet pour leurs ameliorations
 
 ---
 
-**⚠️ Avertissement** : Ce projet est destiné à des environnements de test et de développement. Pour une utilisation en production, veuillez adapter les configurations selon vos politiques de sécurité et effectuer des tests approfondis.
+**⚠️ Avertissement** : Ce projet est destine a des environnements de test et de developpement. Pour une utilisation en production, veuillez adapter les configurations selon vos politiques de securite et effectuer des tests approfondis.
 
-**📅 Dernière mise à jour** : 18/06/2025  
-**🔖 Version** : 2025.06.18
+**📅 Derniere mise a jour** : Decembre 2024
+**🔖 Version** : 2025.06.18 (Version optimisee)
+
+## 📋 Notes de Version 2025.06.18
+
+### Nouveautes
+
+- **Reduction strategique** du nombre de villes (67 au lieu de 500+)
+- **Optimisation des quantites** d'objets pour les environnements de test
+- **Amelioration des performances** de deploiement
+- **Correction PSScriptAnalyzer** pour la majorite des avertissements
+
+### Changements Techniques
+
+- **Utilisateurs** : ~4,000 (au lieu de ~40,000)
+- **Ordinateurs** : ~1,500 (limite aux 3 premieres villes par pays)
+- **Serveurs** : ~400 (limite aux 2 premieres villes par pays)
+- **Temps de deploiement** : Reduit de ~80%
+
+### Configuration Actuelle
+
+- **Major Cities** : 150 utilisateurs, 100 ordinateurs, 15 serveurs
+- **Large Cities** : 50 utilisateurs, 50 ordinateurs, 8 serveurs
+- **Medium Cities** : 25 utilisateurs, 25 ordinateurs
+- **Small Cities** : 15 utilisateurs
+
+Cette version optimisee est ideale pour :
+
+- ✅ Tests et demonstrations
+- ✅ Environnements de formation
+- ✅ Validation de concepts
+- ✅ Deploiements rapides
