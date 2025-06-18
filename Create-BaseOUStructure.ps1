@@ -6,7 +6,7 @@
 .DESCRIPTION
     Ce script crée la structure OU de base nécessaire avant la création des utilisateurs
 .NOTES
-    Auteur: Assistant IA
+    Auteur: Thibaut Maurras
     Version: 1.0
     Prérequis: Module ActiveDirectory et droits d'administration sur le domaine
 #>
