@@ -7,7 +7,7 @@
     Ce script crée des comptes utilisateurs dans différentes OUs organisées par ville/pays/continent
 .NOTES
     Auteur: Assistant IA
-    Version: 1.0
+    Version: 1.1
     Prérequis: Module ActiveDirectory et droits d'administration sur le domaine
 #>
 
@@ -16,7 +16,7 @@ $Configuration = @{
     Domain = "atp.local"
     BaseDN = "DC=atp,DC=local"
     BaseOU = "OU=International,OU=ATP,DC=atp,DC=local"
-    DefaultPassword = "Password1234!"
+    DefaultPassword = "Epsi@2025."
     Cities = @(
         @{
             Name = "Londres"
@@ -38,7 +38,7 @@ $Configuration = @{
         },
         @{
             Name = "Ponte-Vedra"
-            Country = "Usa"
+            Country = "USA"
             Continent = "Amerique-du-Nord"
             UserCount = 50
         }
@@ -73,7 +73,12 @@ function Write-ColoredOutput {
 function Test-ADModule {
     if (!(Get-Module -ListAvailable -Name ActiveDirectory)) {
         Write-ColoredOutput "Le module ActiveDirectory n'est pas disponible. Installation en cours..." -Color "Yellow"
-        Install-WindowsFeature -Name RSAT-AD-PowerShell
+        try {
+            Install-WindowsFeature -Name RSAT-AD-PowerShell -ErrorAction Stop
+        } catch {
+            Write-ColoredOutput "Impossible d'installer le module ActiveDirectory automatiquement." -Color "Red"
+            throw "Module ActiveDirectory requis"
+        }
     }
     Import-Module ActiveDirectory -ErrorAction Stop
 }
@@ -93,33 +98,52 @@ function New-OUStructure {
     # Vérifier que la base OU International existe
     try {
         Get-ADOrganizationalUnit -Identity $BaseOU -ErrorAction Stop | Out-Null
+        Write-ColoredOutput "Base OU trouvée: $BaseOU" -Color "Green"
     } catch {
         Write-ColoredOutput "ERREUR: La base OU '$BaseOU' n'existe pas. Veuillez la créer d'abord." -Color "Red"
-        throw "Base OU manquante"
+        throw "Base OU manquante: $BaseOU"
     }
     
     # Créer OU Continent si elle n'existe pas
     try {
         Get-ADOrganizationalUnit -Identity $ContinentOU -ErrorAction Stop | Out-Null
+        Write-ColoredOutput "OU $Continent existe déjà" -Color "Yellow"
     } catch {
-        New-ADOrganizationalUnit -Name $Continent -Path $BaseOU
-        Write-ColoredOutput "OU $Continent créée" -Color "Green"
+        try {
+            New-ADOrganizationalUnit -Name $Continent -Path $BaseOU -ErrorAction Stop
+            Write-ColoredOutput "OU $Continent créée" -Color "Green"
+        } catch {
+            Write-ColoredOutput "Erreur lors de la création de l'OU $Continent : $($_.Exception.Message)" -Color "Red"
+            throw
+        }
     }
     
     # Créer OU Pays si elle n'existe pas
     try {
         Get-ADOrganizationalUnit -Identity $CountryOU -ErrorAction Stop | Out-Null
+        Write-ColoredOutput "OU $Country existe déjà" -Color "Yellow"
     } catch {
-        New-ADOrganizationalUnit -Name $Country -Path $ContinentOU
-        Write-ColoredOutput "OU $Country créée" -Color "Green"
+        try {
+            New-ADOrganizationalUnit -Name $Country -Path $ContinentOU -ErrorAction Stop
+            Write-ColoredOutput "OU $Country créée" -Color "Green"
+        } catch {
+            Write-ColoredOutput "Erreur lors de la création de l'OU $Country : $($_.Exception.Message)" -Color "Red"
+            throw
+        }
     }
     
     # Créer OU Ville si elle n'existe pas
     try {
         Get-ADOrganizationalUnit -Identity $CityOU -ErrorAction Stop | Out-Null
+        Write-ColoredOutput "OU $City existe déjà" -Color "Yellow"
     } catch {
-        New-ADOrganizationalUnit -Name $City -Path $CountryOU
-        Write-ColoredOutput "OU $City créée" -Color "Green"
+        try {
+            New-ADOrganizationalUnit -Name $City -Path $CountryOU -ErrorAction Stop
+            Write-ColoredOutput "OU $City créée" -Color "Green"
+        } catch {
+            Write-ColoredOutput "Erreur lors de la création de l'OU $City : $($_.Exception.Message)" -Color "Red"
+            throw
+        }
     }
     
     return $CityOU
@@ -135,11 +159,20 @@ function New-RandomUser {
         [array]$ExistingUsers
     )
     
+    $MaxAttempts = 10
+    $Attempt = 0
+    
     do {
         $FirstName = Get-Random -InputObject $FirstNames
         $LastName = Get-Random -InputObject $LastNames
         $Username = "$FirstName.$LastName.$City".ToLower()
-        $Username = $Username -replace "é", "e" -replace "è", "e" -replace "à", "a" -replace "ç", "c" -replace "ô", "o"
+        $Username = $Username -replace "é", "e" -replace "è", "e" -replace "à", "a" -replace "ç", "c" -replace "ô", "o" -replace "û", "u" -replace "ê", "e" -replace "â", "a" -replace "î", "i"
+        $Attempt++
+        
+        if ($Attempt -gt $MaxAttempts) {
+            $Username = "$FirstName.$LastName.$City.$([System.Guid]::NewGuid().ToString().Substring(0,4))".ToLower()
+            break
+        }
     } while ($ExistingUsers -contains $Username)
     
     $UserParams = @{
@@ -159,7 +192,16 @@ function New-RandomUser {
     }
     
     try {
-        New-ADUser @UserParams
+        # Vérifier si l'utilisateur existe déjà
+        try {
+            Get-ADUser -Identity $Username -ErrorAction Stop | Out-Null
+            Write-ColoredOutput "L'utilisateur $Username existe déjà - ignoré" -Color "Yellow"
+            return $null
+        } catch {
+            # L'utilisateur n'existe pas, on peut le créer
+        }
+        
+        New-ADUser @UserParams -ErrorAction Stop
         return $Username
     } catch {
         Write-ColoredOutput "Erreur lors de la création de l'utilisateur $Username : $($_.Exception.Message)" -Color "Red"
@@ -172,9 +214,15 @@ try {
     Write-ColoredOutput "=== Début de la création des comptes utilisateurs internationaux ===" -Color "Cyan"
     
     # Vérifier et charger le module ActiveDirectory
+    Write-ColoredOutput "Vérification du module ActiveDirectory..." -Color "Yellow"
     Test-ADModule
+    Write-ColoredOutput "Module ActiveDirectory chargé avec succès" -Color "Green"
     
-    $TotalUsers = ($Configuration.Cities | Measure-Object -Property UserCount -Sum).Sum
+    # Calculer le total d'utilisateurs
+    $TotalUsers = 0
+    foreach ($City in $Configuration.Cities) {
+        $TotalUsers += $City.UserCount
+    }
     Write-ColoredOutput "Création de $TotalUsers utilisateurs au total" -Color "Yellow"
     
     $CreatedUsers = @()
@@ -183,26 +231,35 @@ try {
     foreach ($City in $Configuration.Cities) {
         Write-ColoredOutput "`n--- Traitement de $($City.Name) ($($City.UserCount) utilisateurs) ---" -Color "Magenta"
         
-        # Créer la structure OU
-        $TargetOU = New-OUStructure -City $City.Name -Country $City.Country -Continent $City.Continent -BaseOU $Configuration.BaseOU
-        
-        # Créer les utilisateurs
-        $CityUsers = @()
-        for ($i = 1; $i -le $City.UserCount; $i++) {
-            $Username = New-RandomUser -City $City.Name -TargetOU $TargetOU -DefaultPassword $Configuration.DefaultPassword -FirstNames $FirstNames -LastNames $LastNames -ExistingUsers $CreatedUsers
+        try {
+            # Créer la structure OU
+            $TargetOU = New-OUStructure -City $City.Name -Country $City.Country -Continent $City.Continent -BaseOU $Configuration.BaseOU
+            Write-ColoredOutput "Structure OU créée pour $($City.Name): $TargetOU" -Color "Green"
             
-            if ($Username) {
-                $CreatedUsers += $Username
-                $CityUsers += $Username
+            # Créer les utilisateurs
+            $CityUsers = @()
+            for ($i = 1; $i -le $City.UserCount; $i++) {
+                $Username = New-RandomUser -City $City.Name -TargetOU $TargetOU -DefaultPassword $Configuration.DefaultPassword -FirstNames $FirstNames -LastNames $LastNames -ExistingUsers $CreatedUsers
+                
+                if ($Username) {
+                    $CreatedUsers += $Username
+                    $CityUsers += $Username
+                }
+                
                 $OverallProgress++
                 
-                if ($i % 50 -eq 0 -or $i -eq $City.UserCount) {
-                    Write-Progress -Activity "Création des utilisateurs pour $($City.Name)" -Status "$i/$($City.UserCount) utilisateurs créés" -PercentComplete (($i / $City.UserCount) * 100)
+                if ($i % 25 -eq 0 -or $i -eq $City.UserCount) {
+                    Write-Progress -Activity "Création des utilisateurs pour $($City.Name)" -Status "$i/$($City.UserCount) utilisateurs traités" -PercentComplete (($i / $City.UserCount) * 100)
+                    Write-ColoredOutput "  Progression: $i/$($City.UserCount) utilisateurs traités pour $($City.Name)" -Color "Gray"
                 }
             }
+            
+            Write-ColoredOutput "$($CityUsers.Count) utilisateurs créés avec succès pour $($City.Name)" -Color "Green"
+            
+        } catch {
+            Write-ColoredOutput "Erreur lors du traitement de $($City.Name): $($_.Exception.Message)" -Color "Red"
+            continue
         }
-        
-        Write-ColoredOutput "$($CityUsers.Count) utilisateurs créés pour $($City.Name)" -Color "Green"
     }
     
     Write-ColoredOutput "`n=== Résumé de la création ===" -Color "Cyan"
@@ -211,15 +268,20 @@ try {
     Write-ColoredOutput "Changement de mot de passe requis à la première connexion" -Color "Yellow"
     
     # Afficher la répartition par ville
+    Write-ColoredOutput "`nRépartition par ville :" -Color "Cyan"
     foreach ($City in $Configuration.Cities) {
-        $CityUserCount = ($CreatedUsers | Where-Object { $_ -like "*.$($City.Name.ToLower())" }).Count
+        $CityUserCount = ($CreatedUsers | Where-Object { $_ -like "*.$($City.Name.ToLower())*" }).Count
         Write-ColoredOutput "- $($City.Name) : $CityUserCount utilisateurs" -Color "White"
     }
     
     Write-ColoredOutput "`n=== Script terminé avec succès ===" -Color "Green"
     
 } catch {
-    Write-ColoredOutput "Erreur fatale : $($_.Exception.Message)" -Color "Red"
-    Write-ColoredOutput $_.ScriptStackTrace -Color "Red"
+    Write-ColoredOutput "`nErreur fatale : $($_.Exception.Message)" -Color "Red"
+    Write-ColoredOutput "Détails: $($_.ScriptStackTrace)" -Color "Red"
+    Write-ColoredOutput "`nVeuillez vérifier :" -Color "Yellow"
+    Write-ColoredOutput "1. Que vous êtes administrateur du domaine" -Color "Yellow"
+    Write-ColoredOutput "2. Que la base OU existe : $($Configuration.BaseOU)" -Color "Yellow"
+    Write-ColoredOutput "3. Que le module ActiveDirectory est installé" -Color "Yellow"
     exit 1
 }
