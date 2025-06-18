@@ -130,21 +130,21 @@ foreach ($City in $Configuration.Cities) {
         # Créer OU Continent
         try {
             Get-ADOrganizationalUnit -Identity $ContinentOU -ErrorAction Stop | Out-Null
-            Write-Host "OU $($City.Continent) existe déjà" -ForegroundColor Yellow
+            Write-Host "OU $($City.Continent) existe deja" -ForegroundColor Yellow
         }
         catch {
             New-ADOrganizationalUnit -Name $City.Continent -Path $Configuration.BaseOU -ErrorAction Stop
-            Write-Host "OU $($City.Continent) créée" -ForegroundColor Green
+            Write-Host "OU $($City.Continent) cree" -ForegroundColor Green
         }
             
         # Créer OU Pays
         try {
             Get-ADOrganizationalUnit -Identity $CountryOU -ErrorAction Stop | Out-Null
-            Write-Host "OU $($City.Country) existe déjà" -ForegroundColor Yellow
+            Write-Host "OU $($City.Country) existe deja" -ForegroundColor Yellow
         }
         catch {
             New-ADOrganizationalUnit -Name $City.Country -Path $ContinentOU -ErrorAction Stop
-            Write-Host "OU $($City.Country) créée" -ForegroundColor Green
+            Write-Host "OU $($City.Country) cree" -ForegroundColor Green
         }
             
         # Créer OU Ville
@@ -167,7 +167,7 @@ foreach ($City in $Configuration.Cities) {
             Write-Host "OU Utilisateurs créée pour $($City.Name)" -ForegroundColor Green
         }
             
-        Write-Host "Structure OU prête: $UsersOU" -ForegroundColor Green
+        Write-Host "Structure OU prete: $UsersOU" -ForegroundColor Green
             
         # Créer les utilisateurs
         $CityUsers = @()
@@ -229,7 +229,7 @@ foreach ($City in $Configuration.Cities) {
                 Path                  = $UsersOU
                 AccountPassword       = (ConvertTo-SecureString $Configuration.DefaultPassword -AsPlainText -Force)
                 Enabled               = $true
-                ChangePasswordAtLogon = $true
+                ChangePasswordAtLogon = $false
                 DisplayName           = "$FirstName $LastName"
                 Description           = "Utilisateur de $($City.Name)"
                 City                  = $City.Name
@@ -260,7 +260,7 @@ foreach ($City in $Configuration.Cities) {
             }
         }
             
-        Write-Host "$($CityUsers.Count) utilisateurs créés pour $($City.Name)" -ForegroundColor Green
+        Write-Host "$($CityUsers.Count) utilisateurs crees pour $($City.Name)" -ForegroundColor Green
             
     }
     catch {
@@ -270,21 +270,21 @@ foreach ($City in $Configuration.Cities) {
 }
     
 Write-Host "" -ForegroundColor White
-Write-Host "=== Résumé de la création ===" -ForegroundColor Cyan
-Write-Host "Total créés: $($CreatedUsers.Keys.Count)/$TotalUsers" -ForegroundColor Green
+Write-Host "=== Resume de la creation ===" -ForegroundColor Cyan
+Write-Host "Total crees: $($CreatedUsers.Keys.Count)/$TotalUsers" -ForegroundColor Green
 Write-Host "Mot de passe: $($Configuration.DefaultPassword)" -ForegroundColor Yellow
-Write-Host "Changement requis à la première connexion" -ForegroundColor Yellow
+Write-Host "Pas de changement requis à la première connexion" -ForegroundColor Green
     
 # Répartition par ville
 Write-Host "" -ForegroundColor White
-Write-Host "Répartition par ville:" -ForegroundColor Cyan
+Write-Host "Repartition par ville:" -ForegroundColor Cyan
 foreach ($City in $Configuration.Cities) {
     $Count = ($CreatedUsers.Values | Where-Object { $_.City -eq $City.Name }).Count
     Write-Host "- $($City.Name): $Count utilisateurs" -ForegroundColor White
 }
 
 Write-Host "" -ForegroundColor White
-Write-Host "Exemples d'utilisateurs créés:" -ForegroundColor Cyan
+Write-Host "Exemples d'utilisateurs crees:" -ForegroundColor Cyan
 $Examples = $CreatedUsers.Keys | Select-Object -First 5
 foreach ($Example in $Examples) {
     $UserInfo = $CreatedUsers[$Example]
@@ -292,4 +292,4 @@ foreach ($Example in $Examples) {
 }
 
 Write-Host "" -ForegroundColor White
-Write-Host "=== Script terminé ===" -ForegroundColor Green
+Write-Host "=== Script termine ===" -ForegroundColor Green
