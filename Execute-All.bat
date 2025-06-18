@@ -24,7 +24,7 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Etape 2: Creation des utilisateurs...
-PowerShell.exe -ExecutionPolicy Bypass -File "Create-InternationalUsers.ps1"
+PowerShell.exe -ExecutionPolicy Bypass -File "Create-UserStructure.ps1"
 
 echo.
 echo Processus termine. Appuyez sur une touche...
