@@ -13,32 +13,32 @@
 
 # Configuration - Modifiable facilement
 $Configuration = @{
-    Domain = "atp.local"
-    BaseDN = "DC=atp,DC=local"
-    BaseOU = "OU=International,OU=ATP,DC=atp,DC=local"
-    DefaultPassword = "Password123!"
-    Cities = @(
+    Domain          = "atp.local"
+    BaseDN          = "DC=atp,DC=local"
+    BaseOU          = "OU=International,OU=ATP,DC=atp,DC=local"
+    DefaultPassword = "Epsi@2025.!" # Mot de passe par défaut pour les nouveaux utilisateurs
+    Cities          = @(
         @{
-            Name = "Londres"
-            Country = "Angleterre" 
+            Name      = "Londres"
+            Country   = "Angleterre" 
             Continent = "Europe"
             UserCount = 300
         },
         @{
-            Name = "Monaco"
-            Country = "France"
+            Name      = "Monaco"
+            Country   = "France"
             Continent = "Europe" 
             UserCount = 150
         },
         @{
-            Name = "Sydney"
-            Country = "Australie"
+            Name      = "Sydney"
+            Country   = "Australie"
             Continent = "Oceanie"
             UserCount = 200
         },
         @{
-            Name = "Ponte-Vedra"
-            Country = "USA"
+            Name      = "Ponte-Vedra"
+            Country   = "USA"
             Continent = "Amerique-du-Nord"
             UserCount = 50
         }
@@ -75,7 +75,8 @@ function Test-ADModule {
         Write-ColoredOutput "Le module ActiveDirectory n'est pas disponible. Installation en cours..." -Color "Yellow"
         try {
             Install-WindowsFeature -Name RSAT-AD-PowerShell -ErrorAction Stop
-        } catch {
+        }
+        catch {
             Write-ColoredOutput "Impossible d'installer le module ActiveDirectory automatiquement." -Color "Red"
             throw "Module ActiveDirectory requis"
         }
@@ -92,10 +93,30 @@ try {
     
     if (!(Get-Module -ListAvailable -Name ActiveDirectory)) {
         Write-Host "Le module ActiveDirectory n'est pas disponible." -ForegroundColor Red
+        Write-Host "Veuillez installer RSAT-AD-PowerShell" -ForegroundColor Yellow
         exit 1
     }
     Import-Module ActiveDirectory -ErrorAction Stop
     Write-Host "Module ActiveDirectory chargé avec succès" -ForegroundColor Green
+    
+    # Vérifier que la structure de base existe
+    Write-Host "Vérification de la structure de base..." -ForegroundColor Yellow
+    try {
+        Get-ADOrganizationalUnit -Identity $Configuration.BaseOU -ErrorAction Stop | Out-Null
+        Write-Host "✓ Structure de base trouvée: $($Configuration.BaseOU)" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "✗ ERREUR: La structure de base n'existe pas: $($Configuration.BaseOU)" -ForegroundColor Red
+        Write-Host "" -ForegroundColor White
+        Write-Host "Solution:" -ForegroundColor Yellow
+        Write-Host "1. Exécutez d'abord le script Create-BaseOUStructure.ps1" -ForegroundColor Yellow
+        Write-Host "2. Ou créez manuellement la structure suivante:" -ForegroundColor Yellow
+        Write-Host "   - OU=ATP,DC=atp,DC=local" -ForegroundColor Gray
+        Write-Host "   - OU=International,OU=ATP,DC=atp,DC=local" -ForegroundColor Gray
+        Write-Host "" -ForegroundColor White
+        Write-Host "Arrêt du script." -ForegroundColor Red
+        exit 1
+    }
     
     # Calculer le total d'utilisateurs
     $TotalUsers = 0
@@ -119,7 +140,8 @@ try {
             try {
                 Get-ADOrganizationalUnit -Identity $Configuration.BaseOU -ErrorAction Stop | Out-Null
                 Write-Host "Base OU trouvée: $($Configuration.BaseOU)" -ForegroundColor Green
-            } catch {
+            }
+            catch {
                 Write-Host "ERREUR: La base OU '$($Configuration.BaseOU)' n'existe pas." -ForegroundColor Red
                 continue
             }
@@ -128,7 +150,8 @@ try {
             try {
                 Get-ADOrganizationalUnit -Identity $ContinentOU -ErrorAction Stop | Out-Null
                 Write-Host "OU $($City.Continent) existe déjà" -ForegroundColor Yellow
-            } catch {
+            }
+            catch {
                 New-ADOrganizationalUnit -Name $City.Continent -Path $Configuration.BaseOU -ErrorAction Stop
                 Write-Host "OU $($City.Continent) créée" -ForegroundColor Green
             }
@@ -137,7 +160,8 @@ try {
             try {
                 Get-ADOrganizationalUnit -Identity $CountryOU -ErrorAction Stop | Out-Null
                 Write-Host "OU $($City.Country) existe déjà" -ForegroundColor Yellow
-            } catch {
+            }
+            catch {
                 New-ADOrganizationalUnit -Name $City.Country -Path $ContinentOU -ErrorAction Stop
                 Write-Host "OU $($City.Country) créée" -ForegroundColor Green
             }
@@ -146,7 +170,8 @@ try {
             try {
                 Get-ADOrganizationalUnit -Identity $CityOU -ErrorAction Stop | Out-Null
                 Write-Host "OU $($City.Name) existe déjà" -ForegroundColor Yellow
-            } catch {
+            }
+            catch {
                 New-ADOrganizationalUnit -Name $City.Name -Path $CountryOU -ErrorAction Stop
                 Write-Host "OU $($City.Name) créée" -ForegroundColor Green
             }
@@ -165,19 +190,19 @@ try {
                 } while ($CreatedUsers -contains $Username)
                 
                 $UserParams = @{
-                    Name = "$FirstName $LastName"
-                    GivenName = $FirstName
-                    Surname = $LastName
-                    SamAccountName = $Username
-                    UserPrincipalName = "$Username@$($Configuration.Domain)"
-                    Path = $CityOU
-                    AccountPassword = (ConvertTo-SecureString $Configuration.DefaultPassword -AsPlainText -Force)
-                    Enabled = $true
+                    Name                  = "$FirstName $LastName"
+                    GivenName             = $FirstName
+                    Surname               = $LastName
+                    SamAccountName        = $Username
+                    UserPrincipalName     = "$Username@$($Configuration.Domain)"
+                    Path                  = $CityOU
+                    AccountPassword       = (ConvertTo-SecureString $Configuration.DefaultPassword -AsPlainText -Force)
+                    Enabled               = $true
                     ChangePasswordAtLogon = $true
-                    DisplayName = "$FirstName $LastName ($($City.Name))"
-                    Description = "Utilisateur de $($City.Name)"
-                    City = $City.Name
-                    PasswordNeverExpires = $false
+                    DisplayName           = "$FirstName $LastName ($($City.Name))"
+                    Description           = "Utilisateur de $($City.Name)"
+                    City                  = $City.Name
+                    PasswordNeverExpires  = $false
                 }
                 
                 try {
@@ -186,15 +211,18 @@ try {
                         Get-ADUser -Identity $Username -ErrorAction Stop | Out-Null
                         Write-Host "L'utilisateur $Username existe déjà - génération d'un nouveau nom" -ForegroundColor Yellow
                         continue
-                    } catch {
+                    }
+                    catch {
                         # L'utilisateur n'existe pas, on peut le créer
+                        # Pas d'action nécessaire, continuer vers la création
                     }
                     
                     New-ADUser @UserParams -ErrorAction Stop
                     $CreatedUsers += $Username
                     $CityUsers += $Username
                     
-                } catch {
+                }
+                catch {
                     Write-Host "Erreur lors de la création de l'utilisateur $Username : $($_.Exception.Message)" -ForegroundColor Red
                 }
                 
@@ -205,7 +233,8 @@ try {
             
             Write-Host "$($CityUsers.Count) utilisateurs créés avec succès pour $($City.Name)" -ForegroundColor Green
             
-        } catch {
+        }
+        catch {
             Write-Host "Erreur lors du traitement de $($City.Name): $($_.Exception.Message)" -ForegroundColor Red
             continue
         }
@@ -225,63 +254,12 @@ try {
     
     Write-Host "`n=== Script terminé avec succès ===" -ForegroundColor Green
     
-} catch {
+}
+catch {
     Write-Host "`nErreur fatale : $($_.Exception.Message)" -ForegroundColor Red
     Write-Host "Détails: $($_.ScriptStackTrace)" -ForegroundColor Red
     exit 1
 }
-        
-        try {
-            # Créer la structure OU
-            $TargetOU = New-OUStructure -City $City.Name -Country $City.Country -Continent $City.Continent -BaseOU $Configuration.BaseOU
-            Write-ColoredOutput "Structure OU créée pour $($City.Name): $TargetOU" -Color "Green"
-            
-            # Créer les utilisateurs
-            $CityUsers = @()
-            for ($i = 1; $i -le $City.UserCount; $i++) {
-                $Username = New-RandomUser -City $City.Name -TargetOU $TargetOU -DefaultPassword $Configuration.DefaultPassword -FirstNames $FirstNames -LastNames $LastNames -ExistingUsers $CreatedUsers
-                
-                if ($Username) {
-                    $CreatedUsers += $Username
-                    $CityUsers += $Username
-                }
-                
-                $OverallProgress++
-                
-                if ($i % 25 -eq 0 -or $i -eq $City.UserCount) {
-                    Write-Progress -Activity "Création des utilisateurs pour $($City.Name)" -Status "$i/$($City.UserCount) utilisateurs traités" -PercentComplete (($i / $City.UserCount) * 100)
-                    Write-ColoredOutput "  Progression: $i/$($City.UserCount) utilisateurs traités pour $($City.Name)" -Color "Gray"
-                }
-            }
-            
-            Write-ColoredOutput "$($CityUsers.Count) utilisateurs créés avec succès pour $($City.Name)" -Color "Green"
-            
-        } catch {
-            Write-ColoredOutput "Erreur lors du traitement de $($City.Name): $($_.Exception.Message)" -Color "Red"
-            continue
-        }
-    }
-    
-    Write-ColoredOutput "`n=== Résumé de la création ===" -Color "Cyan"
-    Write-ColoredOutput "Total d'utilisateurs créés : $($CreatedUsers.Count)/$TotalUsers" -Color "Green"
-    Write-ColoredOutput "Mot de passe par défaut : $($Configuration.DefaultPassword)" -Color "Yellow"
-    Write-ColoredOutput "Changement de mot de passe requis à la première connexion" -Color "Yellow"
-    
-    # Afficher la répartition par ville
-    Write-ColoredOutput "`nRépartition par ville :" -Color "Cyan"
-    foreach ($City in $Configuration.Cities) {
-        $CityUserCount = ($CreatedUsers | Where-Object { $_ -like "*.$($City.Name.ToLower())*" }).Count
-        Write-ColoredOutput "- $($City.Name) : $CityUserCount utilisateurs" -Color "White"
-    }
-    
-    Write-ColoredOutput "`n=== Script terminé avec succès ===" -Color "Green"
-    
-} catch {
-    Write-ColoredOutput "`nErreur fatale : $($_.Exception.Message)" -Color "Red"
-    Write-ColoredOutput "Détails: $($_.ScriptStackTrace)" -Color "Red"
-    Write-ColoredOutput "`nVeuillez vérifier :" -Color "Yellow"
-    Write-ColoredOutput "1. Que vous êtes administrateur du domaine" -Color "Yellow"
-    Write-ColoredOutput "2. Que la base OU existe : $($Configuration.BaseOU)" -Color "Yellow"
-    Write-ColoredOutput "3. Que le module ActiveDirectory est installé" -Color "Yellow"
-    exit 1
+finally {
+    Write-Host "Fin du script. Merci d'avoir utilisé Create-InternationalUsers.ps1 !" -ForegroundColor Cyan
 }
