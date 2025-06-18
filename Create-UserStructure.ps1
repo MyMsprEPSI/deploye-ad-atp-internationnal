@@ -5,7 +5,13 @@
     Script pour créer des comptes utilisateurs Active Directory dans une structure internationale
 .DESCRIPTION
     Ce script crée des comptes utilisateurs dans différentes OUs organisées par ville/pays/continent
+.NOTES
+    Auteur: Thibaut Maurras
+    Version: 1.3
+    Prérequis: Module ActiveDirectory et droits d'administration sur le domaine
 #>
+
+
 
 # Configuration - Modifiable facilement
 $Configuration = @{
