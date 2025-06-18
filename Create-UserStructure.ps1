@@ -165,12 +165,9 @@ catch {
 }
     
 # Calculer le total d'utilisateurs
-$TotalUsers = 0
-foreach ($City in $Configuration.Cities) {
-    $TotalUsers += $City.UserCount
-}
+$TotalUsers = ($Cities | ForEach-Object { $_.UserCount } | Measure-Object -Sum).Sum
 Write-Host "Création de $TotalUsers utilisateurs au total" -ForegroundColor Yellow
-    
+
 $CreatedUsers = @{}
     
 # Fonction pour nettoyer les caractères spéciaux
@@ -200,47 +197,16 @@ foreach ($City in $Cities) {
         $CityOU = "OU=$($City.Name),OU=$($City.Country),OU=$($City.Continent),$($Configuration.BaseOU)"
         $UsersOU = "OU=Utilisateurs,OU=$($City.Name),OU=$($City.Country),OU=$($City.Continent),$($Configuration.BaseOU)"
             
-        # Créer OU Continent
-        try {
-            Get-ADOrganizationalUnit -Identity $ContinentOU -ErrorAction Stop | Out-Null
-            Write-Host "OU $($City.Continent) existe deja" -ForegroundColor Yellow
-        }
-        catch {
-            New-ADOrganizationalUnit -Name $City.Continent -Path $Configuration.BaseOU -ErrorAction Stop
-            Write-Host "OU $($City.Continent) cree" -ForegroundColor Green
-        }
-            
-        # Créer OU Pays
-        try {
-            Get-ADOrganizationalUnit -Identity $CountryOU -ErrorAction Stop | Out-Null
-            Write-Host "OU $($City.Country) existe deja" -ForegroundColor Yellow
-        }
-        catch {
-            New-ADOrganizationalUnit -Name $City.Country -Path $ContinentOU -ErrorAction Stop
-            Write-Host "OU $($City.Country) cree" -ForegroundColor Green
-        }
-            
-        # Créer OU Ville
-        try {
-            Get-ADOrganizationalUnit -Identity $CityOU -ErrorAction Stop | Out-Null
-            Write-Host "OU $($City.Name) existe déjà" -ForegroundColor Yellow
-        }
-        catch {
-            New-ADOrganizationalUnit -Name $City.Name -Path $CountryOU -ErrorAction Stop
-            Write-Host "OU $($City.Name) créée" -ForegroundColor Green
-        }
-        
-        # Créer OU Utilisateurs dans la ville
+        # Vérifier que l'OU Utilisateurs existe
         try {
             Get-ADOrganizationalUnit -Identity $UsersOU -ErrorAction Stop | Out-Null
-            Write-Host "OU Utilisateurs existe déjà pour $($City.Name)" -ForegroundColor Yellow
+            Write-Host "OU Utilisateurs trouvée pour $($City.Name)" -ForegroundColor Green
         }
         catch {
-            New-ADOrganizationalUnit -Name "Utilisateurs" -Path $CityOU -ErrorAction Stop
-            Write-Host "OU Utilisateurs créée pour $($City.Name)" -ForegroundColor Green
+            Write-Host "ERREUR: OU Utilisateurs non trouvée pour $($City.Name)" -ForegroundColor Red
+            Write-Host "Veuillez d'abord exécuter Create-BaseOUStructure.ps1" -ForegroundColor Yellow
+            continue
         }
-            
-        Write-Host "Structure OU prete: $UsersOU" -ForegroundColor Green
             
         # Créer les utilisateurs
         $CityUsers = @()
@@ -274,6 +240,7 @@ foreach ($City in $Cities) {
             }
             catch {
                 # Utilisateur n'existe pas dans AD
+                $ExistingUser = $null
             }
 
             if ($ExistingUser -or $CreatedUsers.ContainsKey($Username)) {
@@ -324,14 +291,47 @@ foreach ($City in $Cities) {
             }
             catch {
                 Write-Host "Erreur création $Username : $($_.Exception.Message)" -ForegroundColor Red
-                # Essayer avec un nom différent
-                $i-- # Répéter cette itération
+                # Continuer avec l'utilisateur suivant
             }
 
             if ($i % 25 -eq 0 -or $i -eq $City.UserCount) {
                 Write-Host "Progression: $i/$($City.UserCount) pour $($City.Name)" -ForegroundColor Gray
             }
         }
+            
+        Write-Host "$($CityUsers.Count) utilisateurs créés pour $($City.Name)" -ForegroundColor Green
+            
+    }
+    catch {
+        Write-Host "Erreur traitement $($City.Name): $($_.Exception.Message)" -ForegroundColor Red
+        continue
+    }
+}
+    
+Write-Host "" -ForegroundColor White
+Write-Host "=== Résumé de la création ===" -ForegroundColor Cyan
+Write-Host "Total créés: $($CreatedUsers.Keys.Count)/$TotalUsers" -ForegroundColor Green
+Write-Host "Mot de passe: $($Configuration.DefaultPassword)" -ForegroundColor Yellow
+Write-Host "Pas de changement requis à la première connexion" -ForegroundColor Green
+    
+# Répartition par ville
+Write-Host "" -ForegroundColor White
+Write-Host "Répartition par ville:" -ForegroundColor Cyan
+foreach ($City in $Cities) {
+    $Count = ($CreatedUsers.Values | Where-Object { $_.City -eq $City.Name }).Count
+    Write-Host "- $($City.Name): $Count utilisateurs" -ForegroundColor White
+}
+
+Write-Host "" -ForegroundColor White
+Write-Host "Exemples d'utilisateurs créés:" -ForegroundColor Cyan
+$Examples = $CreatedUsers.Keys | Select-Object -First 5
+foreach ($Example in $Examples) {
+    $UserInfo = $CreatedUsers[$Example]
+    Write-Host "- $Example ($($UserInfo.FirstName) $($UserInfo.LastName)) - $($UserInfo.City)" -ForegroundColor White
+}
+
+Write-Host "" -ForegroundColor White
+Write-Host "=== Script terminé ===" -ForegroundColor Green
             
         Write-Host "$($CityUsers.Count) utilisateurs crees pour $($City.Name)" -ForegroundColor Green
             
