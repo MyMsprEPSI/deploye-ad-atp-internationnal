@@ -7,7 +7,7 @@
     Ce script crée la structure OU de base complète mondiale nécessaire avant la création des utilisateurs
 .NOTES
     Auteur: Thibaut Maurras
-    Version: 2.0
+    Version: 2025.06.18
     Prérequis: Module ActiveDirectory et droits d'administration sur le domaine
 #>
 
@@ -68,173 +68,174 @@ $Configuration = @{
     }
 }
 
-try {
-    Write-Host "=== Création de la structure mondiale complète OU ATP ===" -ForegroundColor Cyan
-    
-    # Vérifier le module ActiveDirectory
-    Import-Module ActiveDirectory -ErrorAction Stop
-    Write-Host "Module ActiveDirectory chargé" -ForegroundColor Green
-    
-    # Vérifier la connectivité au domaine
-    try {
-        $Domain = Get-ADDomain -ErrorAction Stop
-        Write-Host "Connecté au domaine: $($Domain.DNSRoot)" -ForegroundColor Green
-    }
-    catch {
-        Write-Host "Erreur: Impossible de se connecter au domaine ATP" -ForegroundColor Red
-        exit 1
-    }
-    
-    # Créer la structure de base ATP et International
-    Write-Host "`n=== Création de la structure de base ===" -ForegroundColor Yellow
-    foreach ($OU in $Configuration.BaseOUStructure) {
-        $FullPath = "OU=$($OU.Name),$($OU.Path)"
-        
-        try {
-            Get-ADOrganizationalUnit -Identity $FullPath -ErrorAction Stop | Out-Null
-            Write-Host "OU '$($OU.Name)' existe déjà: $FullPath" -ForegroundColor Yellow
-        }
-        catch {
-            try {
-                New-ADOrganizationalUnit -Name $OU.Name -Path $OU.Path -Description $OU.Description -ErrorAction Stop
-                Write-Host "OU '$($OU.Name)' créée avec succès: $FullPath" -ForegroundColor Green
-            }
-            catch {
-                Write-Host "Erreur lors de la création de l'OU '$($OU.Name)': $($_.Exception.Message)" -ForegroundColor Red
-                exit 1
-            }
-        }
-    }
-    
-    # Créer la structure mondiale complète
-    $BaseInternationalOU = "OU=International,OU=ATP,DC=atp,DC=local"
-    $TotalContinents = $Configuration.WorldStructure.Keys.Count
-    $CurrentContinent = 0
-    
-    Write-Host "`n=== Création de la structure mondiale ===" -ForegroundColor Yellow
-    Write-Host "Création de $TotalContinents continents avec leurs pays et villes..." -ForegroundColor Cyan
-    
-    foreach ($Continent in $Configuration.WorldStructure.Keys) {
-        $CurrentContinent++
-        Write-Host "`n[$CurrentContinent/$TotalContinents] Traitement du continent: $Continent" -ForegroundColor Magenta
-        
-        # Créer OU Continent
-        $ContinentOU = "OU=$Continent,$BaseInternationalOU"
-        try {
-            Get-ADOrganizationalUnit -Identity $ContinentOU -ErrorAction Stop | Out-Null
-            Write-Host "  Continent $Continent existe déjà" -ForegroundColor Yellow
-        }
-        catch {
-            New-ADOrganizationalUnit -Name $Continent -Path $BaseInternationalOU -Description "Continent $Continent" -ErrorAction Stop
-            Write-Host "  Continent $Continent créé" -ForegroundColor Green
-        }
-        
-        $Countries = $Configuration.WorldStructure[$Continent]
-        $TotalCountries = $Countries.Keys.Count
-        $CurrentCountry = 0
-        
-        foreach ($Country in $Countries.Keys) {
-            $CurrentCountry++
-            Write-Host "    [$CurrentCountry/$TotalCountries] Pays: $Country" -ForegroundColor White
-            
-            # Créer OU Pays
-            $CountryOU = "OU=$Country,$ContinentOU"
-            try {
-                Get-ADOrganizationalUnit -Identity $CountryOU -ErrorAction Stop | Out-Null
-            }
-            catch {
-                New-ADOrganizationalUnit -Name $Country -Path $ContinentOU -Description "Pays $Country" -ErrorAction Stop
-                Write-Host "      Pays $Country créé" -ForegroundColor Green
-            }
-            
-            $Cities = $Countries[$Country]
-            $TotalCities = $Cities.Count
-            
-            # Créer les villes par batch pour améliorer les performances
-            $CreatedCities = 0
-            foreach ($City in $Cities) {
-                $CityOU = "OU=$City,$CountryOU"
-                try {
-                    Get-ADOrganizationalUnit -Identity $CityOU -ErrorAction Stop | Out-Null
-                }
-                catch {
-                    try {
-                        New-ADOrganizationalUnit -Name $City -Path $CountryOU -Description "Ville $City, $Country" -ErrorAction Stop
-                        $CreatedCities++
-                        
-                        # Créer les sous-OUs dans chaque ville
-                        $SubOUs = @("Utilisateurs", "Ordinateurs", "Serveurs", "Groupes")
-                        foreach ($SubOU in $SubOUs) {
-                            try {
-                                New-ADOrganizationalUnit -Name $SubOU -Path $CityOU -Description "$SubOU de $City" -ErrorAction Stop
-                            }
-                            catch {
-                                Write-Host "        Erreur création $SubOU dans $City : $($_.Exception.Message)" -ForegroundColor Red
-                            }
-                        }
-                    }
-                    catch {
-                        Write-Host "        Erreur création ville $City : $($_.Exception.Message)" -ForegroundColor Red
-                    }
-                }
-            }
-            
-            if ($CreatedCities -gt 0) {
-                Write-Host "      $CreatedCities/$TotalCities villes créées pour $Country (avec sous-OUs)" -ForegroundColor Green
-            }
-            else {
-                Write-Host "      $TotalCities villes existantes pour $Country" -ForegroundColor Yellow
-            }
-        }
-    }
-    
-    Write-Host "`n=== Vérification de la structure créée ===" -ForegroundColor Cyan
-    
-    # Statistiques finales
-    $TotalOUs = 0
-    $ContinentCount = 0
-    $CountryCount = 0
-    $CityCount = 0
-    
-    foreach ($Continent in $Configuration.WorldStructure.Keys) {
-        $ContinentCount++
-        $Countries = $Configuration.WorldStructure[$Continent]
-        foreach ($Country in $Countries.Keys) {
-            $CountryCount++
-            $Cities = $Countries[$Country]
-            $CityCount += $Cities.Count
-        }
-    }
-    
-    $TotalOUs = 2 + $ContinentCount + $CountryCount + ($CityCount * 5) # ATP + International + Continents + Countries + (Cities * 5 sous-OUs chacune)
-    
-    Write-Host "Structure mondiale créée:" -ForegroundColor Green
-    Write-Host "  - OUs de base: 2 (ATP + International)" -ForegroundColor White
-    Write-Host "  - Continents: $ContinentCount" -ForegroundColor White
-    Write-Host "  - Pays: $CountryCount" -ForegroundColor White
-    Write-Host "  - Villes: $CityCount" -ForegroundColor White
-    Write-Host "  - Sous-OUs par ville: 4 (Utilisateurs, Ordinateurs, Serveurs, Groupes)" -ForegroundColor White
-    Write-Host "  - Total OUs: $TotalOUs" -ForegroundColor Cyan
-    
-    # Vérifier la structure finale
-    $FinalOU = "OU=International,OU=ATP,DC=atp,DC=local"
-    try {
-        $InternationalOU = Get-ADOrganizationalUnit -Identity $FinalOU -ErrorAction Stop
-        Write-Host "`n✓ Structure de base prête: $FinalOU" -ForegroundColor Green
-        Write-Host "  Description: $($InternationalOU.Description)" -ForegroundColor Gray
-        Write-Host "  Créée le: $($InternationalOU.WhenCreated)" -ForegroundColor Gray
-    }
-    catch {
-        Write-Host "`n✗ Erreur: La structure finale n'est pas accessible" -ForegroundColor Red
-        exit 1
-    }
-    
-    Write-Host "`n=== Structure mondiale complète créée avec succès ===" -ForegroundColor Green
-    Write-Host "Vous pouvez maintenant exécuter le script Create-UserStructure.ps1" -ForegroundColor Yellow
-    Write-Host "La structure couvre tous les continents avec leurs principales villes" -ForegroundColor Cyan
-    
-}
-catch {
-    Write-Host "`nErreur fatale: $($_.Exception.Message)" -ForegroundColor Red
+# Script principal
+Write-Information "=== Début de la création de la structure de base ===" -InformationAction Continue
+
+# Vérifier le module ActiveDirectory
+Write-Information "Vérification du module ActiveDirectory..." -InformationAction Continue
+
+if (!(Get-Module -ListAvailable -Name ActiveDirectory)) {
+    Write-Error "Le module ActiveDirectory n'est pas disponible."
+    Write-Information "Veuillez installer RSAT-AD-PowerShell" -InformationAction Continue
     exit 1
 }
+Import-Module ActiveDirectory -ErrorAction Stop
+Write-Information "Module ActiveDirectory chargé avec succès" -InformationAction Continue
+
+# Vérifier la connectivité au domaine
+try {
+    $Domain = Get-ADDomain -ErrorAction Stop
+    Write-Information "Connecté au domaine: $($Domain.DNSRoot)" -InformationAction Continue
+}
+catch {
+    Write-Error "Impossible de se connecter au domaine ATP: $($_.Exception.Message)"
+    exit 1
+}
+
+# Créer la structure de base ATP et International
+Write-Information "`n=== Création de la structure de base ===" -InformationAction Continue
+foreach ($OU in $Configuration.BaseOUStructure) {
+    $FullPath = "OU=$($OU.Name),$($OU.Path)"
+
+    try {
+        Get-ADOrganizationalUnit -Identity $FullPath -ErrorAction Stop | Out-Null
+        Write-Information "OU '$($OU.Name)' existe déjà: $FullPath" -InformationAction Continue
+    }
+    catch {
+        try {
+            New-ADOrganizationalUnit -Name $OU.Name -Path $OU.Path -Description $OU.Description -ErrorAction Stop
+            Write-Information "OU '$($OU.Name)' créée avec succès: $FullPath" -InformationAction Continue
+        }
+        catch {
+            Write-Error "Erreur lors de la création de l'OU '$($OU.Name)': $($_.Exception.Message)"
+            exit 1
+        }
+    }
+}
+
+# Créer la structure mondiale complète
+$BaseInternationalOU = "OU=International,OU=ATP,DC=atp,DC=local"
+$TotalContinents = $Configuration.WorldStructure.Keys.Count
+$CurrentContinent = 0
+
+Write-Information "`n=== Création de la structure mondiale ===" -InformationAction Continue
+Write-Information "Création de $TotalContinents continents avec leurs pays et villes..." -InformationAction Continue
+
+foreach ($Continent in $Configuration.WorldStructure.Keys) {
+    $CurrentContinent++
+    Write-Information "`n[$CurrentContinent/$TotalContinents] Traitement du continent: $Continent" -InformationAction Continue
+
+    # Créer OU Continent
+    $ContinentOU = "OU=$Continent,$BaseInternationalOU"
+    try {
+        Get-ADOrganizationalUnit -Identity $ContinentOU -ErrorAction Stop | Out-Null
+        Write-Information "  Continent $Continent existe déjà" -InformationAction Continue
+    }
+    catch {
+        New-ADOrganizationalUnit -Name $Continent -Path $BaseInternationalOU -Description "Continent $Continent" -ErrorAction Stop
+        Write-Information "  Continent $Continent créé" -InformationAction Continue
+    }
+
+    $Countries = $Configuration.WorldStructure[$Continent]
+    $TotalCountries = $Countries.Keys.Count
+    $CurrentCountry = 0
+
+    foreach ($Country in $Countries.Keys) {
+        $CurrentCountry++
+        Write-Information "    [$CurrentCountry/$TotalCountries] Pays: $Country" -InformationAction Continue
+
+        # Créer OU Pays
+        $CountryOU = "OU=$Country,$ContinentOU"
+        try {
+            Get-ADOrganizationalUnit -Identity $CountryOU -ErrorAction Stop | Out-Null
+        }
+        catch {
+            New-ADOrganizationalUnit -Name $Country -Path $ContinentOU -Description "Pays $Country" -ErrorAction Stop
+            Write-Information "      Pays $Country créé" -InformationAction Continue
+        }
+
+        $Cities = $Countries[$Country]
+        $TotalCities = $Cities.Count
+
+        # Créer les villes par batch pour améliorer les performances
+        $CreatedCities = 0
+        foreach ($City in $Cities) {
+            $CityOU = "OU=$City,$CountryOU"
+            try {
+                Get-ADOrganizationalUnit -Identity $CityOU -ErrorAction Stop | Out-Null
+            }
+            catch {
+                try {
+                    New-ADOrganizationalUnit -Name $City -Path $CountryOU -Description "Ville $City, $Country" -ErrorAction Stop
+                    $CreatedCities++
+
+                    # Créer les sous-OUs dans chaque ville
+                    $SubOUs = @("Utilisateurs", "Ordinateurs", "Serveurs", "Groupes")
+                    foreach ($SubOU in $SubOUs) {
+                        try {
+                            New-ADOrganizationalUnit -Name $SubOU -Path $CityOU -Description "$SubOU de $City" -ErrorAction Stop
+                        }
+                        catch {
+                            Write-Warning "Erreur création $SubOU dans $City : $($_.Exception.Message)"
+                        }
+                    }
+                }
+                catch {
+                    Write-Warning "Erreur création ville $City : $($_.Exception.Message)"
+                }
+            }
+        }
+
+        if ($CreatedCities -gt 0) {
+            Write-Information "      $CreatedCities/$TotalCities villes créées pour $Country (avec sous-OUs)" -InformationAction Continue
+        }
+        else {
+            Write-Information "      $TotalCities villes existantes pour $Country" -InformationAction Continue
+        }
+    }
+}
+
+Write-Information "`n=== Vérification de la structure créée ===" -InformationAction Continue
+
+# Statistiques finales
+$TotalOUs = 0
+$ContinentCount = 0
+$CountryCount = 0
+$CityCount = 0
+
+foreach ($Continent in $Configuration.WorldStructure.Keys) {
+    $ContinentCount++
+    $Countries = $Configuration.WorldStructure[$Continent]
+    foreach ($Country in $Countries.Keys) {
+        $CountryCount++
+        $Cities = $Countries[$Country]
+        $CityCount += $Cities.Count
+    }
+}
+
+$TotalOUs = 2 + $ContinentCount + $CountryCount + ($CityCount * 5) # ATP + International + Continents + Countries + (Cities * 5 sous-OUs chacune)
+
+Write-Information "Structure mondiale créée:" -InformationAction Continue
+Write-Information "  - OUs de base: 2 (ATP + International)" -InformationAction Continue
+Write-Information "  - Continents: $ContinentCount" -InformationAction Continue
+Write-Information "  - Pays: $CountryCount" -InformationAction Continue
+Write-Information "  - Villes: $CityCount" -InformationAction Continue
+Write-Information "  - Sous-OUs par ville: 4 (Utilisateurs, Ordinateurs, Serveurs, Groupes)" -InformationAction Continue
+Write-Information "  - Total OUs: $TotalOUs" -InformationAction Continue
+
+# Vérifier la structure finale
+$FinalOU = "OU=International,OU=ATP,DC=atp,DC=local"
+try {
+    $InternationalOU = Get-ADOrganizationalUnit -Identity $FinalOU -ErrorAction Stop
+    Write-Information "`n✓ Structure de base prête: $FinalOU" -InformationAction Continue
+    Write-Information "  Description: $($InternationalOU.Description)" -InformationAction Continue
+    Write-Information "  Créée le: $($InternationalOU.WhenCreated)" -InformationAction Continue
+}
+catch {
+    Write-Error "La structure finale n'est pas accessible: $($_.Exception.Message)"
+    exit 1
+}
+
+Write-Information "`n=== Structure mondiale complète créée avec succès ===" -InformationAction Continue
+Write-Information "Vous pouvez maintenant exécuter le script Create-UserStructure.ps1" -InformationAction Continue
+Write-Information "La structure couvre tous les continents avec leurs principales villes" -InformationAction Continue

@@ -7,7 +7,7 @@
     Ce script crée des comptes utilisateurs dans différentes OUs organisées par ville/pays/continent
 .NOTES
     Auteur: Thibaut Maurras
-    Version: 1.3
+    Version: 2025.06.18
     Prérequis: Module ActiveDirectory et droits d'administration sur le domaine
 #>
 
@@ -19,6 +19,7 @@ $Configuration = @{
     BaseDN          = "DC=atp,DC=local"
     BaseOU          = "OU=International,OU=ATP,DC=atp,DC=local"
     DefaultPassword = "Epsi@2025."
+    SecurePassword  = $null  # Sera initialisé plus tard
     WorldStructure  = @{
         "Europe"           = @{
             "France"     = @("Paris", "Lyon", "Marseille", "Monaco", "Toulouse", "Nice", "Nantes", "Strasbourg", "Montpellier", "Bordeaux")
@@ -76,6 +77,9 @@ $Configuration = @{
     }
 }
 
+# Initialiser le mot de passe sécurisé
+$Configuration.SecurePassword = ConvertTo-SecureString -String $Configuration.DefaultPassword -AsPlainText -Force
+
 # Fonction pour déterminer la taille d'une ville
 function Get-CitySize {
     param([string]$CityName, [string]$Country)
@@ -114,11 +118,11 @@ foreach ($Continent in $Configuration.WorldStructure.Keys) {
     }
 }
 
-Write-Host "=== Configuration génération mondiale ===" -ForegroundColor Cyan
-Write-Host "Villes à traiter: $($Cities.Count)" -ForegroundColor Yellow
+Write-Information "=== Configuration génération mondiale ===" -InformationAction Continue
+Write-Information "Villes à traiter: $($Cities.Count)" -InformationAction Continue
 
 $TotalUsers = ($Cities | ForEach-Object { $_.UserCount } | Measure-Object -Sum).Sum
-Write-Host "Total utilisateurs à créer: $TotalUsers" -ForegroundColor Yellow
+Write-Information "Total utilisateurs à créer: $TotalUsers" -InformationAction Continue
 
 # Listes de prénoms et noms
 $FirstNames = @(
@@ -138,42 +142,41 @@ $LastNames = @(
 )
 
 # Script principal
+Write-Information "=== Début de la création des comptes utilisateurs internationaux ===" -InformationAction Continue
 
-Write-Host "=== Début de la création des comptes utilisateurs internationaux ===" -ForegroundColor Cyan
-    
 # Vérifier le module ActiveDirectory
-Write-Host "Vérification du module ActiveDirectory..." -ForegroundColor Yellow
-    
+Write-Information "Vérification du module ActiveDirectory..." -InformationAction Continue
+
 if (!(Get-Module -ListAvailable -Name ActiveDirectory)) {
-    Write-Host "Le module ActiveDirectory n'est pas disponible." -ForegroundColor Red
-    Write-Host "Veuillez installer RSAT-AD-PowerShell" -ForegroundColor Yellow
+    Write-Error "Le module ActiveDirectory n'est pas disponible."
+    Write-Information "Veuillez installer RSAT-AD-PowerShell" -InformationAction Continue
     exit 1
 }
 Import-Module ActiveDirectory -ErrorAction Stop
-Write-Host "Module ActiveDirectory chargé avec succès" -ForegroundColor Green
-    
+Write-Information "Module ActiveDirectory chargé avec succès" -InformationAction Continue
+
 # Vérifier la structure de base
-Write-Host "Vérification de la structure de base..." -ForegroundColor Yellow
+Write-Information "Vérification de la structure de base..." -InformationAction Continue
 try {
     Get-ADOrganizationalUnit -Identity $Configuration.BaseOU -ErrorAction Stop | Out-Null
-    Write-Host "Structure de base trouvée: $($Configuration.BaseOU)" -ForegroundColor Green
+    Write-Information "Structure de base trouvée: $($Configuration.BaseOU)" -InformationAction Continue
 }
 catch {
-    Write-Host "ERREUR: La structure de base n'existe pas: $($Configuration.BaseOU)" -ForegroundColor Red
-    Write-Host "Veuillez d'abord exécuter Create-BaseOUStructure.ps1" -ForegroundColor Yellow
+    Write-Error "La structure de base n'existe pas: $($Configuration.BaseOU)"
+    Write-Information "Veuillez d'abord exécuter Create-BaseOUStructure.ps1" -InformationAction Continue
     exit 1
 }
-    
+
 # Calculer le total d'utilisateurs
 $TotalUsers = ($Cities | ForEach-Object { $_.UserCount } | Measure-Object -Sum).Sum
-Write-Host "Création de $TotalUsers utilisateurs au total" -ForegroundColor Yellow
+Write-Information "Création de $TotalUsers utilisateurs au total" -InformationAction Continue
 
 $CreatedUsers = @{}
-    
+
 # Fonction pour nettoyer les caractères spéciaux
-function Clean-String {
+function ConvertTo-CleanString {
     param([string]$InputString)
-    
+
     $cleanString = $InputString.ToLower()
     $cleanString = $cleanString -replace "é", "e" -replace "è", "e" -replace "ê", "e" -replace "ë", "e"
     $cleanString = $cleanString -replace "à", "a" -replace "â", "a" -replace "ä", "a" -replace "á", "a"
@@ -182,49 +185,46 @@ function Clean-String {
     $cleanString = $cleanString -replace "î", "i" -replace "ï", "i" -replace "í", "i"
     $cleanString = $cleanString -replace "-", "" -replace " ", "" -replace "'", ""
     $cleanString = $cleanString -replace "[^a-z0-9]", ""
-    
+
     return $cleanString
 }
 
 foreach ($City in $Cities) {
-    Write-Host "" -ForegroundColor White
-    Write-Host "--- Traitement de $($City.Name) ($($City.UserCount) utilisateurs) ---" -ForegroundColor Magenta
-        
+    Write-Information "" -InformationAction Continue
+    Write-Information "--- Traitement de $($City.Name) ($($City.UserCount) utilisateurs) ---" -InformationAction Continue
+
     try {
         # Définir les chemins OU
-        $ContinentOU = "OU=$($City.Continent),$($Configuration.BaseOU)"
-        $CountryOU = "OU=$($City.Country),OU=$($City.Continent),$($Configuration.BaseOU)"
-        $CityOU = "OU=$($City.Name),OU=$($City.Country),OU=$($City.Continent),$($Configuration.BaseOU)"
         $UsersOU = "OU=Utilisateurs,OU=$($City.Name),OU=$($City.Country),OU=$($City.Continent),$($Configuration.BaseOU)"
-            
+
         # Vérifier que l'OU Utilisateurs existe
         try {
             Get-ADOrganizationalUnit -Identity $UsersOU -ErrorAction Stop | Out-Null
-            Write-Host "OU Utilisateurs trouvée pour $($City.Name)" -ForegroundColor Green
+            Write-Information "OU Utilisateurs trouvée pour $($City.Name)" -InformationAction Continue
         }
         catch {
-            Write-Host "ERREUR: OU Utilisateurs non trouvée pour $($City.Name)" -ForegroundColor Red
-            Write-Host "Veuillez d'abord exécuter Create-BaseOUStructure.ps1" -ForegroundColor Yellow
+            Write-Error "OU Utilisateurs non trouvée pour $($City.Name)"
+            Write-Information "Veuillez d'abord exécuter Create-BaseOUStructure.ps1" -InformationAction Continue
             continue
         }
-            
+
         # Créer les utilisateurs
         $CityUsers = @()
         for ($i = 1; $i -le $City.UserCount; $i++) {
             $Attempts = 0
             $UsernameGenerated = $false
-            
+
             do {
                 $FirstName = Get-Random -InputObject $FirstNames
                 $LastName = Get-Random -InputObject $LastNames
-                
+
                 # Nettoyer les noms
-                $CleanFirstName = Clean-String -InputString $FirstName
-                $CleanLastName = Clean-String -InputString $LastName
-                
+                $CleanFirstName = ConvertTo-CleanString -InputString $FirstName
+                $CleanLastName = ConvertTo-CleanString -InputString $LastName
+
                 # Format: première lettre du prénom + nom de famille
                 $Username = $CleanFirstName.Substring(0, 1) + $CleanLastName
-                
+
                 $Attempts++
                 if ($Attempts -gt 20) {
                     # Si trop de tentatives, ajouter un numéro
@@ -249,7 +249,7 @@ foreach ($City in $Cities) {
                 do {
                     $Username = $CleanFirstName.Substring(0, 1) + $CleanLastName + $Counter.ToString().PadLeft(3, '0')
                     $Counter++
-                    
+
                     try {
                         $ExistingUser = Get-ADUser -Identity $Username -ErrorAction Stop
                     }
@@ -267,7 +267,7 @@ foreach ($City in $Cities) {
                 SamAccountName        = $Username
                 UserPrincipalName     = "$Username@$($Configuration.Domain)"
                 Path                  = $UsersOU
-                AccountPassword       = (ConvertTo-SecureString $Configuration.DefaultPassword -AsPlainText -Force)
+                AccountPassword       = $Configuration.SecurePassword
                 Enabled               = $true
                 ChangePasswordAtLogon = $false
                 DisplayName           = "$FirstName $LastName"
@@ -284,54 +284,54 @@ foreach ($City in $Cities) {
                     LastName  = $LastName
                 }
                 $CityUsers += $Username
-                
+
                 if ($i % 10 -eq 0 -or $i -eq $City.UserCount) {
-                    Write-Host "Créé: $Username ($FirstName $LastName)" -ForegroundColor Green
+                    Write-Information "Créé: $Username ($FirstName $LastName)" -InformationAction Continue
                 }
             }
             catch {
-                Write-Host "Erreur création $Username : $($_.Exception.Message)" -ForegroundColor Red
+                Write-Warning "Erreur création $Username : $($_.Exception.Message)"
                 # Continuer avec l'utilisateur suivant
             }
 
             if ($i % 25 -eq 0 -or $i -eq $City.UserCount) {
-                Write-Host "Progression: $i/$($City.UserCount) pour $($City.Name)" -ForegroundColor Gray
+                Write-Information "Progression: $i/$($City.UserCount) pour $($City.Name)" -InformationAction Continue
             }
         }
-            
-        Write-Host "$($CityUsers.Count) utilisateurs créés pour $($City.Name)" -ForegroundColor Green
-            
+
+        Write-Information "$($CityUsers.Count) utilisateurs créés pour $($City.Name)" -InformationAction Continue
+
     }
     catch {
-        Write-Host "Erreur traitement $($City.Name): $($_.Exception.Message)" -ForegroundColor Red
+        Write-Error "Erreur traitement $($City.Name): $($_.Exception.Message)"
         continue
     }
 }
-    
-Write-Host "" -ForegroundColor White
-Write-Host "=== Résumé de la création ===" -ForegroundColor Cyan
-Write-Host "Total créés: $($CreatedUsers.Keys.Count)/$TotalUsers" -ForegroundColor Green
-Write-Host "Mot de passe: $($Configuration.DefaultPassword)" -ForegroundColor Yellow
-Write-Host "Pas de changement requis à la première connexion" -ForegroundColor Green
+
+Write-Information "" -InformationAction Continue
+Write-Information "=== Résumé de la création ===" -InformationAction Continue
+Write-Information "Total créés: $($CreatedUsers.Keys.Count)/$TotalUsers" -InformationAction Continue
+Write-Information "Mot de passe: $($Configuration.DefaultPassword)" -InformationAction Continue
+Write-Information "Pas de changement requis à la première connexion" -InformationAction Continue
     
 # Répartition par ville
-Write-Host "" -ForegroundColor White
-Write-Host "Répartition par ville:" -ForegroundColor Cyan
+Write-Information "" -InformationAction Continue
+Write-Information "Répartition par ville:" -InformationAction Continue
 foreach ($City in $Cities) {
     $Count = ($CreatedUsers.Values | Where-Object { $_.City -eq $City.Name }).Count
-    Write-Host "- $($City.Name): $Count utilisateurs" -ForegroundColor White
+    Write-Information "- $($City.Name): $Count utilisateurs" -InformationAction Continue
 }
 
-Write-Host "" -ForegroundColor White
-Write-Host "Exemples d'utilisateurs créés:" -ForegroundColor Cyan
+Write-Information "" -InformationAction Continue
+Write-Information "Exemples d'utilisateurs créés:" -InformationAction Continue
 $Examples = $CreatedUsers.Keys | Select-Object -First 5
 foreach ($Example in $Examples) {
     $UserInfo = $CreatedUsers[$Example]
-    Write-Host "- $Example ($($UserInfo.FirstName) $($UserInfo.LastName)) - $($UserInfo.City)" -ForegroundColor White
+    Write-Information "- $Example ($($UserInfo.FirstName) $($UserInfo.LastName)) - $($UserInfo.City)" -InformationAction Continue
 }
 
-Write-Host "" -ForegroundColor White
-Write-Host "=== Script terminé ===" -ForegroundColor Green
+Write-Information "" -InformationAction Continue
+Write-Information "=== Script terminé ===" -InformationAction Continue
             
 Write-Host "$($CityUsers.Count) utilisateurs crees pour $($City.Name)" -ForegroundColor Green
 catch {
