@@ -160,7 +160,5 @@ foreach ($City in $Cities) {
 }
 
 Write-Host "`n=== Script terminé ===" -ForegroundColor Green
-    Write-Host "- $($City.Name): $Count serveurs" -ForegroundColor White
-}
-
+Write-Host "- $($City.Name): $Count serveurs" -ForegroundColor White
 Write-Host "`n=== Script terminé ===" -ForegroundColor Green

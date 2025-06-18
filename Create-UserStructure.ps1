@@ -333,15 +333,12 @@ foreach ($Example in $Examples) {
 Write-Host "" -ForegroundColor White
 Write-Host "=== Script terminé ===" -ForegroundColor Green
             
-        Write-Host "$($CityUsers.Count) utilisateurs crees pour $($City.Name)" -ForegroundColor Green
-            
-    }
-    catch {
-        Write-Host "Erreur traitement $($City.Name): $($_.Exception.Message)" -ForegroundColor Red
-        continue
-    }
+Write-Host "$($CityUsers.Count) utilisateurs crees pour $($City.Name)" -ForegroundColor Green
+catch {
+    Write-Host "Erreur traitement $($City.Name): $($_.Exception.Message)" -ForegroundColor Red
+    continue
 }
-    
+
 Write-Host "" -ForegroundColor White
 Write-Host "=== Resume de la creation ===" -ForegroundColor Cyan
 Write-Host "Total crees: $($CreatedUsers.Keys.Count)/$TotalUsers" -ForegroundColor Green
