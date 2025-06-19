@@ -1,14 +1,20 @@
 # ATP International - Active Directory Structure Deployment
 
+<div align="center">
+
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue.svg)](https://github.com/PowerShell/PowerShell)
 [![Active Directory](https://img.shields.io/badge/Active%20Directory-Windows%20Server-green.svg)](https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**🌐 [English Version](README-EN.md) | Français**
+
+</div>
 
 ## 📋 Description
 
 Ce projet automatise le deploiement d'une structure Active Directory internationale complete pour l'organisation ATP. Il permet de creer une hierarchie organisationnelle mondiale avec des unites d'organisation (OUs), des utilisateurs, des ordinateurs, des serveurs et des groupes repartis sur 6 continents et leurs principales villes.
 
-## 🌍 Structure Mondiale Reduite
+## 🌍 Structure Mondiale Optimisee
 
 Le projet couvre une selection strategique de continents et villes :
 
@@ -31,12 +37,12 @@ Le projet couvre une selection strategique de continents et villes :
 
 ### 👥 Gestion des Utilisateurs
 
-- Generation automatique de **~4,000 utilisateurs** avec prenoms/noms francais realistes
+- Generation automatique de **~1,700 utilisateurs** avec prenoms/noms francais realistes
 - Repartition intelligente basee sur la taille des villes :
-  - **Major** : 150 utilisateurs (capitales, metropoles)
-  - **Large** : 50 utilisateurs (grandes villes)
-  - **Medium** : 25 utilisateurs (villes moyennes)
-  - **Small** : 15 utilisateurs (petites villes)
+  - **Major** : 50 utilisateurs (capitales, metropoles)
+  - **Large** : 20 utilisateurs (grandes villes)
+  - **Medium** : 10 utilisateurs (villes moyennes)
+  - **Small** : 5 utilisateurs (petites villes)
 - Noms d'utilisateur uniques avec gestion des doublons
 - Mot de passe par defaut : `Epsi@2025.`
 
@@ -60,7 +66,8 @@ Le projet couvre une selection strategique de continents et villes :
 
 ```
 deploye-ad-atp-internationnal/
-├── README.md                        # Ce fichier
+├── README.md                        # Documentation française
+├── README-EN.md                     # Documentation anglaise
 ├── Create-BaseOUStructure.ps1       # Creation structure OU de base
 ├── Create-UserStructure.ps1         # Creation des utilisateurs
 ├── Create-ComputersStructure.ps1    # Creation des ordinateurs
@@ -93,7 +100,7 @@ deploye-ad-atp-internationnal/
 ### 1. Cloner le Repository
 
 ```powershell
-git clone https://github.com/votre-organisation/deploye-ad-atp-internationnal.git
+git clone https://github.com/MyMsprEPSI/deploye-ad-atp-internationnal.git
 cd deploye-ad-atp-internationnal
 ```
 
@@ -118,10 +125,10 @@ $Configuration = @{
     BaseOU = "OU=International,OU=ATP,DC=atp,DC=local"
     DefaultPassword = "Epsi@2025."
     UsersPerCity = @{
-        "Major"  = 150    # Grandes metropoles
-        "Large"  = 50     # Grandes villes
-        "Medium" = 25     # Villes moyennes
-        "Small"  = 15     # Petites villes
+        "Major"  = 50     # Grandes metropoles
+        "Large"  = 20     # Grandes villes
+        "Medium" = 10     # Villes moyennes
+        "Small"  = 5      # Petites villes
     }
 }
 ```
@@ -136,7 +143,7 @@ $Configuration = @{
 .\Create-BaseOUStructure.ps1
 ```
 
-**Resultat** : Creation de ~400 OUs (ATP + International + Continents + Pays + Villes + Sous-OUs)
+**Resultat** : Creation de ~400 OUs
 
 #### 2. Utilisateurs
 
@@ -144,7 +151,7 @@ $Configuration = @{
 .\Create-UserStructure.ps1
 ```
 
-**Resultat** : Creation de ~4,000 utilisateurs repartis mondialement
+**Resultat** : Creation de ~1,700 utilisateurs
 
 #### 3. Ordinateurs
 
@@ -152,7 +159,7 @@ $Configuration = @{
 .\Create-ComputersStructure.ps1
 ```
 
-**Resultat** : Creation de ~1,500 ordinateurs (3 premieres villes par pays)
+**Resultat** : Creation de ~1,500 ordinateurs
 
 #### 4. Serveurs
 
@@ -160,7 +167,7 @@ $Configuration = @{
 .\Create-ServersStructure.ps1
 ```
 
-**Resultat** : Creation de ~400 serveurs (2 premieres villes par pays)
+**Resultat** : Creation de ~400 serveurs
 
 #### 5. Groupes
 
@@ -168,7 +175,7 @@ $Configuration = @{
 .\Create-GroupsStructure.ps1
 ```
 
-**Resultat** : Creation de ~670 groupes (10 groupes par ville)
+**Resultat** : Creation de ~670 groupes
 
 ### Execution Complete
 
@@ -189,48 +196,18 @@ foreach ($Script in $Scripts) {
 }
 ```
 
-## 📊 Statistiques de Deploiement (Version Optimisee)
+## 📊 Statistiques de Deploiement
 
-| Element          | Quantite Approximative | Description                                    |
-| ---------------- | ---------------------- | ---------------------------------------------- |
-| **OUs Total**    | ~400                   | Base + Continents + Pays + Villes + Sous-OUs   |
-| **Utilisateurs** | ~4,000                 | Repartis selon la taille des villes            |
-| **Ordinateurs**  | ~1,500                 | PC, Laptops, Workstations (3 villes/pays)      |
-| **Serveurs**     | ~400                   | Serveurs specialises par role (2 villes/pays)  |
-| **Groupes**      | ~670                   | 10 groupes par ville                           |
-| **Continents**   | 6                      | Europe, Ameriques, Asie, Afrique, Oceanie      |
-| **Pays**         | 26                     | Principales puissances economiques             |
-| **Villes**       | 67                     | Metropoles et villes importantes selectionnees |
-
-## ⚙️ Configuration Avancee
-
-### Personnalisation des Quantites
-
-```powershell
-# Dans Create-UserStructure.ps1
-$UsersPerCity = @{
-    "Major"  = 200    # Augmenter pour plus d'utilisateurs
-    "Large"  = 75     # Adapter selon vos besoins
-    "Medium" = 40     # Configuration flexible
-    "Small"  = 20     # Minimum recommande
-}
-```
-
-### Ajout de Nouvelles Villes
-
-```powershell
-# Exemple d'ajout dans la WorldStructure
-"Nouveau-Continent" = @{
-    "Nouveau-Pays" = @("Ville1", "Ville2", "Ville3")
-}
-```
-
-### Modification du Mot de Passe
-
-```powershell
-# Dans la configuration
-DefaultPassword = "VotreMotDePasse@$(Get-Date -Format 'yyyy')"
-```
+| Element          | Quantite | Description                                   |
+| ---------------- | -------- | --------------------------------------------- |
+| **OUs Total**    | ~400     | Base + Continents + Pays + Villes + Sous-OUs  |
+| **Utilisateurs** | ~1,700   | Repartis selon la taille des villes           |
+| **Ordinateurs**  | ~1,500   | PC, Laptops, Workstations (3 villes/pays)     |
+| **Serveurs**     | ~400     | Serveurs specialises par role (2 villes/pays) |
+| **Groupes**      | ~670     | 10 groupes par ville                          |
+| **Continents**   | 6        | Europe, Ameriques, Asie, Afrique, Oceanie     |
+| **Pays**         | 26       | Principales puissances economiques            |
+| **Villes**       | 67       | Metropoles et villes importantes              |
 
 ## 🔍 Monitoring et Validation
 
@@ -248,33 +225,16 @@ $Stats = @{
 $Stats | Format-Table -AutoSize
 ```
 
-### Scripts de Validation
+## 🛠️ Corrections PSScriptAnalyzer
 
-```powershell
-# Verifier la structure par continent
-foreach ($Continent in @("Europe", "Amerique-du-Nord", "Asie")) {
-    $OU = "OU=$Continent,OU=International,OU=ATP,DC=atp,DC=local"
-    $Count = (Get-ADUser -Filter * -SearchBase $OU).Count
-    Write-Information "$Continent : $Count utilisateurs" -InformationAction Continue
-}
-```
-
-## 🛠️ Ameliorations PSScriptAnalyzer
-
-### Corrections Apportees (Version 2025.06.18)
+### Ameliorations Version 2025.06.18
 
 - ✅ **Suppression des caracteres speciaux** dans tous les commentaires
-- ✅ **Remplacement de Write-Host** par Write-Information avec -InformationAction Continue
+- ✅ **Remplacement de Write-Host** par Write-Information
 - ✅ **Correction des blocs catch vides** avec gestion d'erreur appropriee
 - ✅ **Suppression des espaces de fin de ligne**
-- ✅ **Gestion securisee des mots de passe** avec ConvertTo-SecureString
-- ✅ **Optimisation des performances** avec reduction du nombre de villes
-
-### Problemes Restants a Corriger
-
-- ⚠️ **Erreurs de parsing** dans Create-BaseOUStructure.ps1 (lignes 221, 228)
-- ⚠️ **Blocs catch vides** dans certains scripts
-- ⚠️ **Encodage BOM** manquant pour les fichiers Unicode
+- ✅ **Gestion securisee des mots de passe**
+- ✅ **Optimisation des performances**
 
 ## 🔐 Securite
 
@@ -291,6 +251,82 @@ foreach ($Continent in @("Europe", "Amerique-du-Nord", "Asie")) {
 # Script de nettoyage (a utiliser avec precaution)
 # Remove-ADOrganizationalUnit -Identity "OU=International,OU=ATP,DC=atp,DC=local" -Recursive -Confirm:$false
 ```
+
+## 🤝 Contribution
+
+### Comment Contribuer
+
+1. Fork le projet
+2. Creer une branche feature (`git checkout -b feature/nouvelle-fonctionnalite`)
+3. Commit des changements (`git commit -am 'Ajout nouvelle fonctionnalite'`)
+4. Push vers la branche (`git push origin feature/nouvelle-fonctionnalite`)
+5. Creer une Pull Request
+
+### Standards de Code
+
+- Utiliser `Write-Information` au lieu de `Write-Host`
+- Gestion d'erreur avec `try/catch` appropriee
+- Commentaires sans accents pour la compatibilite
+- Respect des conventions PowerShell et PSScriptAnalyzer
+
+## 📄 Licence
+
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de details.
+
+## 📞 Support
+
+### Contact
+
+- **Auteur** : Thibaut Maurras
+- **Version** : 2025.06.18
+- **Repository** : [GitHub - ATP AD Deployment](https://github.com/MyMsprEPSI/deploye-ad-atp-internationnal)
+
+### Documentation
+
+- 🇫🇷 [Documentation Française](README.md) (ce fichier)
+- 🇬🇧 [English Documentation](README-EN.md)
+
+---
+
+**⚠️ Avertissement** : Ce projet est destine a des environnements de test et de developpement. Pour une utilisation en production, veuillez adapter les configurations selon vos politiques de securite et effectuer des tests approfondis.
+
+**📅 Derniere mise a jour** : Decembre 2024  
+**🔖 Version** : 2025.06.18 (Version optimisee pour tests)
+Write-Information "$Continent : $Count utilisateurs" -InformationAction Continue
+}
+
+````
+
+## 🛠️ Ameliorations PSScriptAnalyzer
+
+### Corrections Apportees (Version 2025.06.18)
+
+- ✅ **Suppression des caracteres speciaux** dans tous les commentaires
+- ✅ **Remplacement de Write-Host** par Write-Information avec -InformationAction Continue
+- ✅ **Correction des blocs catch vides** avec gestion d'erreur appropriee
+- ✅ **Suppression des espaces de fin de ligne**
+- ✅ **Gestion securisee des mots de passe** avec ConvertTo-SecureString
+- ✅ **Optimisation des performances** avec reduction du nombre de villes
+- ✅ **Amelioration de la lisibilite** des scripts avec commentaires clairs et concis
+- ✅ **Respect des conventions PowerShell** et PSScriptAnalyzer
+
+
+
+## 🔐 Securite
+
+### Bonnes Pratiques
+
+- Les mots de passe par defaut doivent etre changes apres le deploiement
+- Utiliser des comptes de service dedies pour l'execution des scripts
+- Audit et logging de toutes les creations d'objets
+- Mise en place de politiques de groupe appropriees
+
+### Nettoyage Post-Deploiement
+
+```powershell
+# Script de nettoyage (a utiliser avec precaution)
+# Remove-ADOrganizationalUnit -Identity "OU=International,OU=ATP,DC=atp,DC=local" -Recursive -Confirm:$false
+````
 
 ## 📈 Evolutivite
 
@@ -329,7 +365,6 @@ Le systeme est concu pour etre facilement extensible :
 
 Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de details.
 
-
 ## 🏆 Remerciements
 
 - Equipe Microsoft Active Directory pour la documentation
@@ -339,6 +374,3 @@ Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de
 ---
 
 **⚠️ Avertissement** : Ce projet est destine a des environnements de test et de developpement. Pour une utilisation en production, veuillez adapter les configurations selon vos politiques de securite et effectuer des tests approfondis.
-
-**📅 Derniere mise a jour** : Decembre 2024
-**🔖 Version** : 2025.06.18 (Version optimisee)
